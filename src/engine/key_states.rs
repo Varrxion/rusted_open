@@ -1,11 +1,11 @@
 use glfw::{Action, Key, WindowEvent};
 use std::collections::HashSet;
 
-pub struct State {
+pub struct KeyStates {
     active_keys: HashSet<Key>, // Track active keys
 }
 
-impl State {
+impl KeyStates {
     pub fn new() -> Self {
         Self {
             active_keys: HashSet::new(),

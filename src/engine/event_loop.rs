@@ -5,7 +5,7 @@ use nalgebra::Matrix4;
 
 use crate::{api::api_entry_point::ApiEntryPoint, engine::graphics};
 
-use super::{graphics::{texture_manager::TextureManager, util::{master_clock, master_graphics_list::MasterGraphicsList}}, scenes::scene_manager::SceneManager, key_states::State};
+use super::{graphics::{texture_manager::TextureManager, util::{master_clock, master_graphics_list::MasterGraphicsList}}, scenes::scene_manager::SceneManager, key_states::KeyStates};
 
 pub struct EventLoop {
     glfw: glfw::Glfw,
@@ -76,8 +76,8 @@ impl EventLoop {
     }
     
     pub fn run_event_loop(&mut self) {  
-        // Create the state to manage keys and other state
-        let mut state = State::new();
+        // Create the key_states to manage keys and other state
+        let mut key_states = KeyStates::new();
 
         let texture_manager = Arc::new(RwLock::new(TextureManager::new()));
 
@@ -113,13 +113,13 @@ impl EventLoop {
                         }
                     },
                     _ => {
-                        state.handle_key_event(event); // Handle other window events
+                        key_states.handle_key_event(event); // Handle other window events
                     }
                 }
             }
 
             // This is the api entry point, so developers have a more abstracted view rather than working with the engine directly
-            api_entry_point.entry_point(&mut self.glfw, &mut self.window, &mut self.master_clock, texture_manager.clone(), &mut scene_manager, &mut self.master_graphics_list, &mut state);
+            api_entry_point.entry_point(&mut self.glfw, &mut self.window, &mut self.master_clock, texture_manager.clone(), &mut scene_manager, &mut self.master_graphics_list, &mut key_states);
 
             // Render here
             unsafe {

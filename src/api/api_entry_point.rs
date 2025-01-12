@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 use glfw::{Glfw, Key, PWindow};
 use nalgebra::Vector3;
 
-use crate::engine::{graphics::{texture_manager::TextureManager, util::{master_clock::MasterClock, master_graphics_list::MasterGraphicsList}}, key_states::State, scenes::scene_manager::SceneManager};
+use crate::engine::{graphics::{texture_manager::TextureManager, util::{master_clock::MasterClock, master_graphics_list::MasterGraphicsList}}, key_states::KeyStates, scenes::scene_manager::SceneManager};
 
 use super::events::{collision::Collision, movement::Movement};
 
@@ -21,7 +21,7 @@ impl ApiEntryPoint {
 
     /// This is the entry point for the framework. I will include sample code here.
     /// Direct changes may be made to the engine itself if needed but this is the "developer-friendly" way to work with the engine.
-    pub fn entry_point(&mut self, glfw: &mut Glfw, window: &mut PWindow, master_clock: &mut MasterClock, texture_manager: Arc<RwLock<TextureManager>>, scene_manager: &mut SceneManager, master_graphics_list: &mut MasterGraphicsList, state: &mut State) {
+    pub fn entry_point(&mut self, glfw: &mut Glfw, window: &mut PWindow, master_clock: &mut MasterClock, texture_manager: Arc<RwLock<TextureManager>>, scene_manager: &mut SceneManager, master_graphics_list: &mut MasterGraphicsList, state: &mut KeyStates) {
 
         if self.first_loop==true {
             self.first_loop(texture_manager, scene_manager, master_graphics_list);
