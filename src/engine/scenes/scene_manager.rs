@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, fs::File, path::Path, sync::{Arc, RwLock}};
+use std::{collections::{HashMap, HashSet}, fs::{self, File}, path::Path, sync::{Arc, RwLock}};
 
 use nalgebra::Vector3;
 use serde::Deserialize;
@@ -98,6 +98,30 @@ impl SceneManager {
     
         self.add_scene(scene_name, json_scene);
     
+        Ok(())
+    }
+
+    /// Loads all scenes from JSON files in the specified directory
+    pub fn load_scenes_from_directory(&mut self, dir_path: &str, texture_manager: &TextureManager) -> Result<(), String> {
+        let paths = fs::read_dir(dir_path).map_err(|_| "Failed to read directory".to_string())?;
+
+        for path in paths {
+            let entry = path.map_err(|_| "Failed to read directory entry".to_string())?;
+            let file_name = entry.file_name().into_string().map_err(|_| "Invalid file name".to_string())?;
+            let full_path = entry.path();
+
+            // Only load JSON files
+            if full_path.is_file() {
+                if let Some(extension) = full_path.extension() {
+                    if extension == "json" {
+                        // Load the scene with the file name
+                        self.load_scene_from_json(full_path.to_str().unwrap(), texture_manager)
+                            .map_err(|e| format!("Error loading scene '{}': {}", file_name, e))?;
+                    }
+                }
+            }
+        }
+
         Ok(())
     }
 }

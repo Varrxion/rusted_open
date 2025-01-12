@@ -1,11 +1,11 @@
-use std::{path::Path, sync::{Arc, RwLock}};
+use std::sync::{Arc, RwLock};
 
 use glfw::{Action, Context, GlfwReceiver, Key, WindowEvent};
-use nalgebra::{Matrix4, Vector3};
+use nalgebra::Matrix4;
 
-use crate::engine::{events::{collision, movement::rotate_object}, graphics};
+use crate::{api::api_entry_point::ApiEntryPoint, engine::graphics};
 
-use super::{events::movement::move_object, graphics::{texture_manager::TextureManager, util::{master_clock, master_graphics_list::MasterGraphicsList}}, scenes::scene_manager::SceneManager, key_states::State};
+use super::{graphics::{texture_manager::TextureManager, util::{master_clock, master_graphics_list::MasterGraphicsList}}, scenes::scene_manager::SceneManager, key_states::State};
 
 pub struct EventLoop {
     glfw: glfw::Glfw,
@@ -81,19 +81,9 @@ impl EventLoop {
 
         let texture_manager = Arc::new(RwLock::new(TextureManager::new()));
 
-        let _ = texture_manager.write().unwrap().load_textures_from_directory("src\\resources\\textures");
-
         let mut scene_manager = SceneManager::new();
 
-        let path = Path::new("./src/resources/scenes/testscene2.json");
-        let _ = scene_manager.load_scene_from_json(path.to_str().unwrap(), &texture_manager.read().unwrap());
-
-        if let Some(scene) = scene_manager.get_scene("testscene2") {
-            let scene = scene.write().expect("Failed to lock the scene for writing");
-            self.master_graphics_list.load_scene(&scene);
-        } else {
-            println!("Scene 'testscene2' not found");
-        }
+        let mut api_entry_point = ApiEntryPoint::new();
         
         while !self.window.should_close() {
             // Update the clock
@@ -127,54 +117,9 @@ impl EventLoop {
                     }
                 }
             }
-    
-            // Retrieve the square from the master graphics list
-            let square = self.master_graphics_list.get_object("debug_playersquare").expect("Object not found");
 
-            let delta_time = self.master_clock.get_delta_time();
-
-            // Apply movement based on active keys
-            let move_speed = 0.2;
-            let rotation_speed = 2.0;
-            if state.is_key_pressed(Key::W) {
-                move_object(square.clone(), Vector3::new(0.0, 1.0, 0.0), move_speed, delta_time);
-            }
-            if state.is_key_pressed(Key::S) {
-                move_object(square.clone(), Vector3::new(0.0, -1.0, 0.0), move_speed, delta_time);
-            }
-            if state.is_key_pressed(Key::A) {
-                move_object(square.clone(), Vector3::new(-1.0, 0.0, 0.0), move_speed, delta_time);
-            }
-            if state.is_key_pressed(Key::D) {
-                move_object(square.clone(), Vector3::new(1.0, 0.0, 0.0), move_speed, delta_time);
-            }
-            if state.is_key_pressed(Key::Q) {
-                rotate_object(square.clone(), rotation_speed*delta_time);
-            }
-            if state.is_key_pressed(Key::E) {
-                rotate_object(square.clone(), -rotation_speed*delta_time);
-            }
-
-            //position debug info
-            //let debugpos = square.read().unwrap().get_position();
-            //println!("{}", debugpos);
-
-            //spin this object for testing
-            if let Some(object_2) = self.master_graphics_list.get_object("testscene2_obj1") {
-                let mut object_2_read = object_2.write().unwrap(); // Read the `newsquare` object
-                let rotfactor = object_2_read.get_rotation()+1.0*delta_time;
-                object_2_read.set_rotation(rotfactor);
-            } else {
-                println!("No object found with name testscene2_obj1.");
-            }
-
-            // Call the collision checking method
-            let collision_events = collision::check_collisions(&self.master_graphics_list, "debug_playersquare");
-
-            for event in collision_events {
-                println!("Collision detected between Object ID {} and Object ID {}", event.object_name_1, event.object_name_2);
-            }
-
+            // This is the api entry point, so developers have a more abstracted view rather than working with the engine directly
+            api_entry_point.entry_point(&mut self.glfw, &mut self.window, &mut self.master_clock, texture_manager.clone(), &mut scene_manager, &mut self.master_graphics_list, &mut state);
 
             // Render here
             unsafe {
