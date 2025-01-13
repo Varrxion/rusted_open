@@ -1,0 +1,14 @@
+So scenes will probably be the hardest thing to create. Let me go through the parts of a scene.
+
+If you look into testscene.json you can see the "objects" list which contains 3 objects. Each object has different information.
+
+name: The internal name of the object, I would recommend prefixing this with the scene name but you can pick any name scheme you want.
+vertex_data: The vertex data is the set of points which create the object, it can be any number of points.
+texture_coords: Whereas the vertex_data is based on the "world" coordinates, the texture coords are relative to the object, and determine how the texture file is mapped onto the object.
+vertex_shader: For more information on how to write a vertex shader, please look into the OpenGL documentation.
+fragment_shader: For more information on how to write a fragment shader, pelase look into the OpenGL documentation.
+position: This determines the starting position of the object. More technically, this is the initial transformation which will be applied to the object's model matrix.
+rotation: The initial rotation of the object in radians.
+scale: The initial scale of the object. 1.0 means object will appear the same as the model matrix describes.
+texture_name: The name of the texture to be mapped onto the object. Does NOT need the extension .png or .jpg or anything, just the name.
+collision_modes: If you want to use the pre-built collision system, you can specify one or more collision types here.
