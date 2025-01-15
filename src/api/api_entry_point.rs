@@ -28,7 +28,7 @@ impl ApiEntryPoint {
         }
 
         // Retrieve the square from the master graphics list
-        let square = master_graphics_list.get_object("debug_playersquare").expect("Object not found");
+        let square = master_graphics_list.get_object("testscene_playersquare").expect("Object not found");
 
         // Thou shalt not use frame-based physics
         let delta_time = master_clock.get_delta_time();
@@ -65,7 +65,7 @@ impl ApiEntryPoint {
         }
 
         // Call the collision checking method
-        let collision_events = Collision::check_collisions(&master_graphics_list, "debug_playersquare");
+        let collision_events = Collision::check_collisions(&master_graphics_list, "testscene_playersquare");
 
         // Check the collision documentation if the output seems confusing
         for event in collision_events {

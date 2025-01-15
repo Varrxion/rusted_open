@@ -1,7 +1,7 @@
 {
     "objects": [
 		{
-			"name": "debug_playersquare",
+			"name": "testscene_playersquare",
             "vertex_data": [ 
                 0.1, 0.1,
                 0.1, -0.1,
@@ -63,7 +63,7 @@
             "position": [0.3, 0.0, 0.0],
             "rotation": 0.0,
             "scale": 1.0,
-            "texture_name": "FamiliarBlock",
+            "texture_name": "BasicCharacterGreen",
             "collision_modes": ["AABB", "Circle"]
         },
 		{
