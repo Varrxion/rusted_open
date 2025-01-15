@@ -1,5 +1,5 @@
 pub mod graphics;
-pub mod event_loop;
+pub mod engine_controller;
 pub mod events;
 pub mod key_states;
 pub mod scenes;
