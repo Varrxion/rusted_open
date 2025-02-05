@@ -20,14 +20,14 @@ pub struct EngineController {
 }
 
 impl EngineController {
-    pub fn new(window_name: String) -> Self {
+    pub fn new(window_name: &str) -> Self {
         let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
 
         glfw.window_hint(glfw::WindowHint::Resizable(false));
 
         // Create a windowed mode window and its OpenGL context
         let (mut window, events) = glfw
-            .create_window(640 as u32, 480 as u32, &window_name, glfw::WindowMode::Windowed)
+            .create_window(640 as u32, 480 as u32, window_name, glfw::WindowMode::Windowed)
             .expect("Failed to create GLFW window.");
 
         // Set up the projection matrix once
