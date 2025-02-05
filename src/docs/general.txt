@@ -1,3 +1,0 @@
-This project is structured to be flexible so that the engine is simply a base which the user can mold more specifically into their requirements either by direct access to the engine or more likely through the API.
-
-I will provide more specific feature documentation in the associated text files.

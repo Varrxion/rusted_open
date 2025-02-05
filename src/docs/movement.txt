@@ -1,5 +1,0 @@
-Movement struct has two methods, rotate_object and move_object.
-
-move_object takes the object and a positional vector, a speed, and the latest delta time. This will modify the model matrix which changes the objects position while maintaining it's shape.
-
-rotate_object add's the specified amount of radians (can be negative) to the object by modifying the model matrix. 

@@ -1,1 +1,0 @@
-The master graphics list is the 2d graphics object list which the engine will render during the main event loop, which is abstracted from the API for simplicities sake.

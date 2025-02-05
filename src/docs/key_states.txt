@@ -1,1 +1,0 @@
-The key_states object is keeping track of which keys are pressed or released. This should make user input processing easier.
