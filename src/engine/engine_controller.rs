@@ -1,6 +1,6 @@
 use std::sync::{Arc, RwLock};
 
-use glfw::{Action, Context, Glfw, GlfwReceiver, Key, PWindow, WindowEvent};
+use glfw::{Context, GlfwReceiver, WindowEvent};
 use nalgebra::Matrix4;
 
 use crate::engine::graphics;

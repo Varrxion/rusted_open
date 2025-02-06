@@ -3,3 +3,4 @@ pub mod engine_controller;
 pub mod events;
 pub mod key_states;
 pub mod scenes;
+pub mod audio;
