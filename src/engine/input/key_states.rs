@@ -20,22 +20,33 @@ impl KeyStates {
         }
     }
 
-    // Handle window events to update the key states
-    pub fn handle_key_event(&mut self, event: WindowEvent) {
-        if let WindowEvent::Key(key, _, action, _) = event {
-            let new_state = match action {
-                Action::Press => KeyState::Pressed,
-                Action::Repeat => KeyState::Held,
-                Action::Release => KeyState::Released,
-                _ => return,
-            };
-
-            // Update the state of the key in the hashmap
-            self.keys.insert(key, new_state);
+    // Update all pressed keys to held keys (before processing new press and release events)
+    pub fn update_pressed_keys(&mut self) {
+        for (key, state) in self.keys.iter_mut() {
+            if *state == KeyState::Pressed {
+                *state = KeyState::Held;
+            }
         }
     }
 
-    // Returns true if the key was just pressed (not held from the previous tick)
+    // Handle window events to update the key states
+    pub fn handle_key_event(&mut self, event: WindowEvent) {
+        if let WindowEvent::Key(key, _, action, _) = event {
+            match action {
+                Action::Press => {
+                    // Mark the key as pressed immediately
+                    self.keys.insert(key, KeyState::Pressed);
+                }
+                Action::Release => {
+                    // Mark the key as released
+                    self.keys.insert(key, KeyState::Released);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    // Returns true if the key was just pressed (not held from the previous frame)
     pub fn is_key_pressed(&self, key: Key) -> bool {
         match self.keys.get(&key) {
             Some(KeyState::Pressed) => true,
