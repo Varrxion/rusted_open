@@ -13,3 +13,4 @@ nalgebra = "0.33.1"
 image = "0.25.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+rodio = "0.20.1"
