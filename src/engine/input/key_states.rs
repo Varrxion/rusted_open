@@ -21,11 +21,16 @@ impl KeyStates {
     }
 
     // Update all pressed keys to held keys (before processing new press and release events)
-    pub fn update_pressed_keys(&mut self) {
-        for (key, state) in self.keys.iter_mut() {
-            if *state == KeyState::Pressed {
-                *state = KeyState::Held;
-            }
+    pub fn update_pressed_to_held(&mut self) {
+        let pressed_keys: Vec<Key> = self
+            .keys
+            .iter()
+            .filter(|(_, &state)| state == KeyState::Pressed)
+            .map(|(&key, _)| key)
+            .collect();
+
+        for key in pressed_keys {
+            self.keys.insert(key, KeyState::Held);
         }
     }
 

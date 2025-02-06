@@ -80,7 +80,10 @@ impl EngineController {
         // Update the clock
         self.master_clock.write().unwrap().update();
 
-        // Update key events
+        // Update Pressed Keys to Held Keys
+        self.key_states.write().unwrap().update_pressed_to_held();
+
+        // Handle key events
         self.glfw.poll_events();
         for (_, event) in glfw::flush_messages(&self.events) {
             match event {
