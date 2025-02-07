@@ -1,60 +1,122 @@
 use std::collections::{HashMap, VecDeque};
-use std::sync::RwLock;
-use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
+use std::sync::{Arc, RwLock};
+use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink, Source};
 use std::fs::File;
 use std::io::{BufReader, Read};
 
+pub enum AudioType {
+    Music,
+    Sound,
+    UI,
+}
+
+pub struct AudioQueueItem {
+    name: String,
+    audio_type: AudioType,
+    volume: f32,
+    looped: bool,
+}
+
 pub struct AudioManager {
     sounds: RwLock<HashMap<String, Vec<u8>>>,  // Store audio data in memory
-    audio_queue: RwLock<VecDeque<String>>,     // Queue for sounds to be played
+    audio_queue: RwLock<VecDeque<AudioQueueItem>>,     // Queue for sounds to be played
     _stream: OutputStream,
     stream_handle: OutputStreamHandle,
+    music_sinks: Vec<Arc<Sink>>, // 2 music sinks
+    sound_sinks: Vec<Arc<Sink>>, // 32 sound sinks
+    ui_sinks: Vec<Arc<Sink>>, // 4 UI sinks
 }
 
 impl AudioManager {
     pub fn new() -> Self {
         let (stream, stream_handle) = OutputStream::try_default().expect("Failed to create audio stream");
+        
+        let music_sinks = (0..2).map(|_| Arc::new(Sink::try_new(&stream_handle).unwrap())).collect();
+        let sound_sinks = (0..32).map(|_| Arc::new(Sink::try_new(&stream_handle).unwrap())).collect();
+        let ui_sinks = (0..4).map(|_| Arc::new(Sink::try_new(&stream_handle).unwrap())).collect();
+        
         AudioManager {
             sounds: RwLock::new(HashMap::new()),
             audio_queue: RwLock::new(VecDeque::new()),
             _stream: stream,
             stream_handle,
+            music_sinks,
+            sound_sinks,
+            ui_sinks,
         }
     }
 
-    // Enqueue a sound for playback
-    pub fn enqueue_sound(&self, name: &str) {
+    // Enqueue a audio for playback
+    pub fn enqueue_audio(&self, name: &str, audio_type: AudioType, volume: f32, looped: bool) {
         let mut queue = self.audio_queue.write().unwrap();
-        queue.push_back(name.to_string());
+        queue.push_back(AudioQueueItem {
+            name: name.to_string(),
+            audio_type,
+            volume,
+            looped,
+        });
     }
 
-    // Process and play sounds in the queue
+    // Process and play all audio in the queue
     pub fn process_audio_queue(&self) -> Result<(), String> {
         let mut queue = self.audio_queue.write().unwrap();
 
-        while let Some(name) = queue.pop_front() {
-            // Play each sound from the queue
-            self.play_sound(&name)?;
+        while let Some(item) = queue.pop_front() {
+            self.play_sound(&item)?;
         }
 
         Ok(())
     }
 
     // Play the sound
-    pub fn play_sound(&self, name: &str) -> Result<(), String> {
+    pub fn play_sound(&self, item: &AudioQueueItem) -> Result<(), String> {
         let sounds = self.sounds.read().unwrap();
-        let sound_data = sounds.get(name).ok_or("Sound not found".to_string())?;
+        let sound_data = sounds.get(&item.name).ok_or("Sound not found".to_string())?;
         let cursor = std::io::Cursor::new(sound_data.clone());
         let source = Decoder::new(BufReader::new(cursor)).map_err(|_| "Failed to decode audio".to_string())?;
 
-        let sink = Sink::try_new(&self.stream_handle).map_err(|_| "Failed to create audio sink".to_string())?;
-        sink.append(source);
-        sink.detach(); // Let it play independently
+        let sink = match item.audio_type {
+            AudioType::Music => self.music_sinks.iter().find(|s| s.empty()).unwrap_or(&self.music_sinks[0]).clone(),
+            AudioType::Sound => self.sound_sinks.iter().find(|s| s.empty()).unwrap_or(&self.sound_sinks[0]).clone(),
+            AudioType::UI => self.ui_sinks.iter().find(|s| s.empty()).unwrap_or(&self.ui_sinks[0]).clone(),
+        };
+        
+        sink.set_volume(item.volume);
+        if item.looped {
+            sink.append(source.repeat_infinite());
+        } 
+        else {
+            sink.append(source);
+        }
         
         Ok(())
     }
 
-    // Load sounds from a directory
+    pub fn stop_audio(&self) {
+        self.stop_music_sinks();
+        self.stop_sound_sinks();
+        self.stop_ui_sinks();
+    }
+
+    pub fn stop_music_sinks(&self) {
+        for sink in &self.music_sinks {
+            sink.stop();
+        }
+    }
+
+    pub fn stop_sound_sinks(&self) {
+        for sink in &self.sound_sinks {
+            sink.stop();
+        }
+    }
+
+    pub fn stop_ui_sinks(&self) {
+        for sink in &self.ui_sinks {
+            sink.stop();
+        }
+    }
+
+    // Load a sound
     pub fn load_sound(&self, name: &str, path: &str) -> Result<(), String> {
         let mut sounds = self.sounds.write().unwrap();
         
