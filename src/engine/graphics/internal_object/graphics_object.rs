@@ -206,6 +206,7 @@ impl Generic2DGraphicsObject {
     }  
 
     // Check for collision with another object
+    // To have a collision, SELF and OTHER must SHARE the collision type. For example, Circle Collision objects cannot collide with AABB Collision Objects unless they both have AABB and Circle.
     pub fn is_colliding(&self, other: &Generic2DGraphicsObject) -> bool {
         for mode in &self.collision_modes {
             if other.collision_modes.contains(mode) && self.check_collision(other, *mode) {
