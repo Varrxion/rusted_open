@@ -22,9 +22,10 @@ pub struct AudioManager {
     audio_queue: RwLock<VecDeque<AudioQueueItem>>,     // Queue for sounds to be played
     _stream: OutputStream,
     stream_handle: OutputStreamHandle,
-    music_sinks: Vec<Arc<Sink>>, // 2 music sinks
-    sound_sinks: Vec<Arc<Sink>>, // 32 sound sinks
-    ui_sinks: Vec<Arc<Sink>>, // 4 UI sinks
+    // I really should set up a proper mixing solution but this is good enough for now.
+    music_sinks: Vec<Arc<Sink>>, // 2 music sinks (or otherwise "Loop" sinks. You can loop any audio type for the sake of freedom, but I'd recommend doing it in these because stopping all music will be less abrupt than stopping all sounds, and music is probably what you are looping anyway)
+    sound_sinks: Vec<Arc<Sink>>, // 24 sound sinks (for common sounds that can be dropped without much consequence if too many sounds are playing)
+    ui_sinks: Vec<Arc<Sink>>, // 4 UI sinks (or otherwise "Priority" sinks, to be used sparingly for sounds that should never be dropped)
 }
 
 impl AudioManager {
@@ -32,7 +33,7 @@ impl AudioManager {
         let (stream, stream_handle) = OutputStream::try_default().expect("Failed to create audio stream");
         
         let music_sinks = (0..2).map(|_| Arc::new(Sink::try_new(&stream_handle).unwrap())).collect();
-        let sound_sinks = (0..32).map(|_| Arc::new(Sink::try_new(&stream_handle).unwrap())).collect();
+        let sound_sinks = (0..24).map(|_| Arc::new(Sink::try_new(&stream_handle).unwrap())).collect();
         let ui_sinks = (0..4).map(|_| Arc::new(Sink::try_new(&stream_handle).unwrap())).collect();
         
         AudioManager {
@@ -76,10 +77,13 @@ impl AudioManager {
         let source = Decoder::new(BufReader::new(cursor)).map_err(|_| "Failed to decode audio".to_string())?;
 
         let sink = match item.audio_type {
-            AudioType::Music => self.music_sinks.iter().find(|s| s.empty()).unwrap_or(&self.music_sinks[0]).clone(),
-            AudioType::Sound => self.sound_sinks.iter().find(|s| s.empty()).unwrap_or(&self.sound_sinks[0]).clone(),
-            AudioType::UI => self.ui_sinks.iter().find(|s| s.empty()).unwrap_or(&self.ui_sinks[0]).clone(),
+            AudioType::Music => self.music_sinks.iter().find(|s| s.empty()).cloned(),
+            AudioType::Sound => self.sound_sinks.iter().find(|s| s.empty()).cloned(),
+            AudioType::UI => self.ui_sinks.iter().find(|s| s.empty()).cloned(),
         };
+
+        // If no sinks are available for that sound type, we will just not play the audio.
+        let Some(sink) = sink else { return Ok(()); };
         
         sink.set_volume(item.volume);
         if item.looped {
