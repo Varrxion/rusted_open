@@ -24,7 +24,7 @@ pub struct AudioManager {
     stream_handle: OutputStreamHandle,
     // I really should set up a proper mixing solution but this is good enough for now.
     music_sinks: Vec<Arc<Sink>>, // 2 music sinks (or otherwise "Loop" sinks. You can loop any audio type for the sake of freedom, but I'd recommend doing it in these because stopping all music will be less abrupt than stopping all sounds, and music is probably what you are looping anyway)
-    sound_sinks: Vec<Arc<Sink>>, // 24 sound sinks (for common sounds that can be dropped without much consequence if too many sounds are playing)
+    sound_sinks: Vec<Arc<Sink>>, // 16 sound sinks (for common sounds that can be dropped without much consequence if too many sounds are playing)
     ui_sinks: Vec<Arc<Sink>>, // 4 UI sinks (or otherwise "Priority" sinks, to be used sparingly for sounds that should never be dropped)
 }
 
@@ -33,7 +33,7 @@ impl AudioManager {
         let (stream, stream_handle) = OutputStream::try_default().expect("Failed to create audio stream");
         
         let music_sinks = (0..2).map(|_| Arc::new(Sink::try_new(&stream_handle).unwrap())).collect();
-        let sound_sinks = (0..24).map(|_| Arc::new(Sink::try_new(&stream_handle).unwrap())).collect();
+        let sound_sinks = (0..16).map(|_| Arc::new(Sink::try_new(&stream_handle).unwrap())).collect();
         let ui_sinks = (0..4).map(|_| Arc::new(Sink::try_new(&stream_handle).unwrap())).collect();
         
         AudioManager {
