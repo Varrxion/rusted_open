@@ -84,7 +84,6 @@ impl SceneManager {
                 json_collision_modes,
             );
     
-            graphics_object.print_debug();
             let wrapped_object = Arc::new(RwLock::new(graphics_object));
     
             json_scene.add_object(wrapped_object);
