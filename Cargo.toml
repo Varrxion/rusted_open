@@ -8,9 +8,5 @@ description = "Open source cross-platform rendering engine in Rust built on Open
 [dependencies]
 glfw = "0.58"
 gl = "0.14.0"
-bytemuck = "1.19.0"
 nalgebra = "0.33.1"
 image = "0.25.4"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-rodio = "0.20.1"
