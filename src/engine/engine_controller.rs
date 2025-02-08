@@ -8,7 +8,7 @@ use crate::engine::graphics;
 use super::graphics::{texture_manager::TextureManager, util::{master_clock::{self, MasterClock}, master_graphics_list::MasterGraphicsList}};
 
 pub struct EngineController {
-    glfw: glfw::Glfw,
+    glfw: Arc<RwLock<glfw::Glfw>>,
     window: glfw::PWindow,
     events: GlfwReceiver<(f64, WindowEvent)>,
     master_graphics_list: Arc<RwLock<MasterGraphicsList>>,
@@ -19,12 +19,12 @@ pub struct EngineController {
 
 impl EngineController {
     pub fn new(window_name: &str) -> Self {
-        let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
+        let glfw = Arc::new(RwLock::new(glfw::init(glfw::fail_on_errors).unwrap()));
 
-        glfw.window_hint(glfw::WindowHint::Resizable(false));
+        glfw.write().unwrap().window_hint(glfw::WindowHint::Resizable(false));
 
         // Create a windowed mode window and its OpenGL context
-        let (mut window, events) = glfw
+        let (mut window, events) = glfw.write().unwrap()
             .create_window(640 as u32, 480 as u32, window_name, glfw::WindowMode::Windowed)
             .expect("Failed to create GLFW window.");
 
@@ -109,7 +109,7 @@ impl EngineController {
         self.master_graphics_list.write().unwrap().remove_all();
     }
 
-    pub fn get_glfw(&mut self) -> Glfw {
+    pub fn get_glfw(&mut self) -> Arc<RwLock<Glfw>> {
         return self.glfw.clone();
     }
 
