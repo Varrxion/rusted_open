@@ -5,7 +5,7 @@ use nalgebra::Matrix4;
 
 use crate::engine::graphics;
 
-use super::{audio::audio_manager::AudioManager, graphics::{texture_manager::TextureManager, util::{master_clock::{self, MasterClock}, master_graphics_list::MasterGraphicsList}}, input::key_states::KeyStates, scenes::scene_manager::SceneManager};
+use super::{audio::audio_manager::AudioManager, graphics::{texture_manager::TextureManager, util::{master_clock::{self, MasterClock}, master_graphics_list::MasterGraphicsList}}, input::key_states::KeyStates};
 
 pub struct EngineController {
     glfw: glfw::Glfw,
@@ -15,7 +15,6 @@ pub struct EngineController {
     master_clock: Arc<RwLock<master_clock::MasterClock>>,
     projection_matrix: Matrix4<f32>,
     texture_manager: Arc<RwLock<TextureManager>>,
-    scene_manager: Arc<RwLock<SceneManager>>,
     key_states: Arc<RwLock<KeyStates>>,
     audio_manager: Arc<RwLock<AudioManager>>,
 }
@@ -51,7 +50,6 @@ impl EngineController {
             master_clock: Arc::new(RwLock::new(MasterClock::new())),
             projection_matrix,
             texture_manager: Arc::new(RwLock::new(TextureManager::new())),
-            scene_manager: Arc::new(RwLock::new(SceneManager::new())),
             key_states: Arc::new(RwLock::new(KeyStates::new())),
             audio_manager: Arc::new(RwLock::new(AudioManager::new())),
         }
@@ -115,10 +113,6 @@ impl EngineController {
 
     pub fn get_texture_manager(&mut self) -> Arc<RwLock<TextureManager>> {
         return self.texture_manager.clone();
-    }
-
-    pub fn get_scene_manager(&mut self) -> Arc<RwLock<SceneManager>> {
-        return self.scene_manager.clone();
     }
 
     pub fn get_master_clock(&self) -> Arc<RwLock<MasterClock>> {
