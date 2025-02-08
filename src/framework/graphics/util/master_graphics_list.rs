@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::{Arc, RwLock}};
 use nalgebra::Matrix4;
 
-use crate::engine::graphics::internal_object::graphics_object::Generic2DGraphicsObject;
+use crate::framework::graphics::internal_object::graphics_object::Generic2DGraphicsObject;
 
 pub struct MasterGraphicsList {
     objects: Arc<RwLock<HashMap<String, Arc<RwLock<Generic2DGraphicsObject>>>>>, // Change key type to String

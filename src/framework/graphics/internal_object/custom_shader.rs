@@ -1,5 +1,5 @@
 use gl::types::GLuint;
-use crate::engine::graphics::compile::create_shader_program;
+use crate::framework::graphics::compile::create_shader_program;
 
 pub struct CustomShader {
     shader_program: GLuint,

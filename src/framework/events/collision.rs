@@ -1,4 +1,4 @@
-use crate::engine::graphics::util::master_graphics_list::MasterGraphicsList;
+use crate::framework::graphics::util::master_graphics_list::MasterGraphicsList;
 
 #[derive(Debug, PartialEq)]
 pub struct CollisionEvent {

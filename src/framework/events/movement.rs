@@ -1,6 +1,6 @@
 use std::sync::{Arc, RwLock};
 use nalgebra::Vector3;
-use crate::engine::graphics::internal_object::graphics_object::Generic2DGraphicsObject;
+use crate::framework::graphics::internal_object::graphics_object::Generic2DGraphicsObject;
 
 pub fn move_object(object: Arc<RwLock<Generic2DGraphicsObject>>, direction: Vector3<f32>, speed: f32, delta_time: f32) {
     let mut object = object.write().unwrap();

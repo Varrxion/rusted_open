@@ -1,49 +1,28 @@
 use std::sync::{Arc, RwLock};
 
-use glfw::{Context, Glfw, GlfwReceiver, WindowEvent};
+use glfw::Context;
 use nalgebra::Matrix4;
 
-use crate::engine::graphics;
+use crate::framework::graphics;
 
 use super::graphics::{texture_manager::TextureManager, util::{master_clock::{self, MasterClock}, master_graphics_list::MasterGraphicsList}};
 
-pub struct EngineController {
-    glfw: Arc<RwLock<glfw::Glfw>>,
-    window: glfw::PWindow,
-    events: GlfwReceiver<(f64, WindowEvent)>,
+pub struct FrameworkController {
     master_graphics_list: Arc<RwLock<MasterGraphicsList>>,
     master_clock: Arc<RwLock<master_clock::MasterClock>>,
     projection_matrix: Matrix4<f32>,
     texture_manager: Arc<RwLock<TextureManager>>,
 }
 
-impl EngineController {
-    pub fn new(window_name: &str) -> Self {
-        let glfw = Arc::new(RwLock::new(glfw::init(glfw::fail_on_errors).unwrap()));
-
-        glfw.write().unwrap().window_hint(glfw::WindowHint::Resizable(false));
-
-        // Create a windowed mode window and its OpenGL context
-        let (mut window, events) = glfw.write().unwrap()
-            .create_window(640 as u32, 480 as u32, window_name, glfw::WindowMode::Windowed)
-            .expect("Failed to create GLFW window.");
-
+impl FrameworkController {
+    pub fn new() -> Self {
         // Set up the projection matrix once
         let projection_matrix = Self::calculate_projection_matrix(640 as f32, 480 as f32);
-
-        // Make the window's context current
-        window.make_current();
-
-        // Enable key events
-        window.set_key_polling(true);
 
         // Load OpenGL functions
         graphics::glfw::load_gl_symbols();
 
         Self {
-            glfw,
-            window,
-            events,
             master_graphics_list: Arc::new(RwLock::new(MasterGraphicsList::new())),
             master_clock: Arc::new(RwLock::new(MasterClock::new())),
             projection_matrix,
@@ -56,8 +35,8 @@ impl EngineController {
         Matrix4::new_orthographic(-1.0, 1.0, -1.0 / aspect_ratio, 1.0 / aspect_ratio, -1.0, 1.0)
     }
 
+    /// Sets the resolution of the openGL viewport and updates the projection matrix
     pub fn set_resolution(&mut self, width: f32, height: f32) {
-        self.window.set_size(width as i32, height as i32);
         self.projection_matrix = Self::calculate_projection_matrix(width, height);
         unsafe {
             gl::Viewport(0, 0, width as i32, height as i32);  // Update the OpenGL viewport
@@ -65,30 +44,10 @@ impl EngineController {
     }
 
     /// Returns true if the window should close
-    pub fn execute_tick(&mut self) -> bool {
-
-        if self.window.should_close() {
-            return true;
-        }
+    pub fn execute_tick(&mut self, mut window: glfw::PWindow) {
 
         // Update the clock
         self.master_clock.write().unwrap().update();
-
-        /*
-        // Update Pressed Keys to Held Keys
-        self.key_states.write().unwrap().update_pressed_to_held();
-
-        // Handle key events
-        self.glfw.poll_events();
-        for (_, event) in glfw::flush_messages(&self.events) {
-            match event {
-                _ => {
-                    //Add or remove a key from the list of currently held keys based on the current user input
-                    self.key_states.write().unwrap().handle_key_event(event);
-                }
-            }
-        }
-        */
 
         // Render here
         unsafe {
@@ -100,17 +59,11 @@ impl EngineController {
         self.master_graphics_list.write().unwrap().draw_all(&self.projection_matrix);
 
         // Swap buffers
-        self.window.swap_buffers();
-
-        return false;
+        window.swap_buffers();
     }
 
     pub fn shutdown(&mut self) {
         self.master_graphics_list.write().unwrap().remove_all();
-    }
-
-    pub fn get_glfw(&mut self) -> Arc<RwLock<Glfw>> {
-        return self.glfw.clone();
     }
 
     pub fn get_texture_manager(&mut self) -> Arc<RwLock<TextureManager>> {
