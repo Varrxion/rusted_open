@@ -1,11 +1,11 @@
 use std::sync::{Arc, RwLock};
 
-use glfw::{Context, GlfwReceiver, WindowEvent};
+use glfw::{Context, Glfw, GlfwReceiver, WindowEvent};
 use nalgebra::Matrix4;
 
 use crate::engine::graphics;
 
-use super::{graphics::{texture_manager::TextureManager, util::{master_clock::{self, MasterClock}, master_graphics_list::MasterGraphicsList}}, input::key_states::KeyStates};
+use super::graphics::{texture_manager::TextureManager, util::{master_clock::{self, MasterClock}, master_graphics_list::MasterGraphicsList}};
 
 pub struct EngineController {
     glfw: glfw::Glfw,
@@ -15,7 +15,6 @@ pub struct EngineController {
     master_clock: Arc<RwLock<master_clock::MasterClock>>,
     projection_matrix: Matrix4<f32>,
     texture_manager: Arc<RwLock<TextureManager>>,
-    key_states: Arc<RwLock<KeyStates>>,
 }
 
 impl EngineController {
@@ -49,7 +48,6 @@ impl EngineController {
             master_clock: Arc::new(RwLock::new(MasterClock::new())),
             projection_matrix,
             texture_manager: Arc::new(RwLock::new(TextureManager::new())),
-            key_states: Arc::new(RwLock::new(KeyStates::new())),
         }
     }
 
@@ -76,6 +74,7 @@ impl EngineController {
         // Update the clock
         self.master_clock.write().unwrap().update();
 
+        /*
         // Update Pressed Keys to Held Keys
         self.key_states.write().unwrap().update_pressed_to_held();
 
@@ -89,6 +88,7 @@ impl EngineController {
                 }
             }
         }
+        */
 
         // Render here
         unsafe {
@@ -109,6 +109,10 @@ impl EngineController {
         self.master_graphics_list.write().unwrap().remove_all();
     }
 
+    pub fn get_glfw(&mut self) -> Glfw {
+        return self.glfw.clone();
+    }
+
     pub fn get_texture_manager(&mut self) -> Arc<RwLock<TextureManager>> {
         return self.texture_manager.clone();
     }
@@ -119,9 +123,5 @@ impl EngineController {
 
     pub fn get_master_graphics_list(&mut self) -> Arc<RwLock<MasterGraphicsList>> {
         return self.master_graphics_list.clone();
-    }
-
-    pub fn get_key_states(&mut self) -> Arc<RwLock<KeyStates>> {
-        return self.key_states.clone();
     }
 }
