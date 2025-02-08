@@ -122,7 +122,7 @@ impl Generic2DGraphicsObject {
     }
 
     // Method to calculate width and height based on vertex data
-    fn dimensions(&self) -> (f32, f32) {
+    pub fn dimensions(&self) -> (f32, f32) {
         let min_x = self.vertex_data.iter()
             .step_by(2) // Take x-coordinates
             .cloned()
@@ -151,7 +151,7 @@ impl Generic2DGraphicsObject {
         (width, height)
     }
 
-    fn get_radius(&self) -> f32 {
+    pub fn get_radius(&self) -> f32 {
         self.vertex_data
             .chunks(2)
             .map(|v| (v[0].powi(2) + v[1].powi(2)).sqrt() * self.scale)
