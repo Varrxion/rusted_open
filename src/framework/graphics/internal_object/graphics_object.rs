@@ -1,6 +1,6 @@
 use gl::types::GLuint;
 use nalgebra::{Matrix4, Vector3};
-use std::{collections::HashSet, ffi::CString, sync::{Arc, RwLock}};
+use std::{ffi::CString, sync::{Arc, RwLock}};
 use super::{vao::VAO, vbo::VBO};
 
 pub struct Generic2DGraphicsObject {
@@ -15,7 +15,6 @@ pub struct Generic2DGraphicsObject {
     rotation: f32,
     scale: f32,
     model_matrix: Matrix4<f32>,
-    collision_modes: HashSet<CollisionMode>,
 }
 
 impl Clone for Generic2DGraphicsObject {
@@ -32,7 +31,6 @@ impl Clone for Generic2DGraphicsObject {
             rotation: self.rotation,
             scale: self.scale,
             model_matrix: self.model_matrix,
-            collision_modes: self.collision_modes.clone(),
         }
     }
 }
@@ -49,7 +47,6 @@ impl Generic2DGraphicsObject {
         rotation: f32,
         scale: f32,
         texture_id: Option<GLuint>, // Accept texture ID as an argument
-        collision_modes: HashSet<CollisionMode>,
     ) -> Self {
         let mut object = Self {
             name,
@@ -63,7 +60,6 @@ impl Generic2DGraphicsObject {
             rotation,
             scale,
             model_matrix: Matrix4::identity(), // Identity matrix for 2D
-            collision_modes,
         };
         object.initialize(texture_id); // Pass texture ID to initialize
         object
@@ -155,74 +151,11 @@ impl Generic2DGraphicsObject {
         (width, height)
     }
 
-    pub fn is_colliding_aabb(&self, other: &Generic2DGraphicsObject) -> bool {
-        let (width_self, height_self) = self.dimensions();
-        let (width_other, height_other) = other.dimensions();
-
-        let half_width_self = width_self / 2.0;
-        let half_height_self = height_self / 2.0;
-
-        let half_width_other = width_other / 2.0;
-        let half_height_other = height_other / 2.0;
-
-        let self_min_x = self.position.x - half_width_self;
-        let self_max_x = self.position.x + half_width_self;
-        let self_min_y = self.position.y - half_height_self;
-        let self_max_y = self.position.y + half_height_self;
-
-        let other_min_x = other.position.x - half_width_other;
-        let other_max_x = other.position.x + half_width_other;
-        let other_min_y = other.position.y - half_height_other;
-        let other_max_y = other.position.y + half_height_other;
-
-        self_min_x < other_max_x &&
-        self_max_x > other_min_x &&
-        self_min_y < other_max_y &&
-        self_max_y > other_min_y
-    }
-
-    fn is_colliding_circle(&self, other: &Generic2DGraphicsObject) -> bool {
-        let dx = other.position.x - self.position.x;
-        let dy = other.position.y - self.position.y;
-        let distance_squared = dx * dx + dy * dy;
-
-        let radius_self = self.get_radius();
-        let radius_other = other.get_radius();
-
-        let radius_sum = radius_self + radius_other;
-        distance_squared < radius_sum * radius_sum
-    }
-
     fn get_radius(&self) -> f32 {
         self.vertex_data
             .chunks(2)
             .map(|v| (v[0].powi(2) + v[1].powi(2)).sqrt() * self.scale)
             .fold(0.0, f32::max)
-    }
-
-    fn is_colliding_obb(&self, other: &Generic2DGraphicsObject) -> bool {
-        // Implement OBB collision logic here
-        unimplemented!("OBB collision not yet implemented");
-    }  
-
-    // Check for collision with another object
-    // To have a collision, SELF and OTHER must SHARE the collision type. For example, Circle Collision objects cannot collide with AABB Collision Objects unless they both have AABB and Circle.
-    pub fn is_colliding(&self, other: &Generic2DGraphicsObject) -> bool {
-        for mode in &self.collision_modes {
-            if other.collision_modes.contains(mode) && self.check_collision(other, *mode) {
-                return true;
-            }
-        }
-        false
-    }
-
-    // Helper to perform the appropriate collision check
-    fn check_collision(&self, other: &Generic2DGraphicsObject, mode: CollisionMode) -> bool {
-        match mode {
-            CollisionMode::AABB => self.is_colliding_aabb(other),
-            CollisionMode::Circle => self.is_colliding_circle(other),
-            CollisionMode::OBB => self.is_colliding_obb(other),
-        }
     }
 
     pub fn get_name(&self) -> &str {
@@ -267,15 +200,7 @@ impl Generic2DGraphicsObject {
         println!("Rotation: {}", self.rotation);
         println!("Scale: {}", self.scale);
         println!("Model Matrix: {:?}", self.model_matrix);
-        println!("Collision Modes: {:?}", self.collision_modes);
         println!("Position VBO ID: {}", self.position_vbo.id());
         println!("Texture VBO ID: {}\n", self.tex_vbo.id());
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum CollisionMode {
-    AABB,
-    Circle,
-    OBB,
 }
