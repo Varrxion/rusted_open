@@ -5,7 +5,7 @@ use nalgebra::Matrix4;
 
 use crate::engine::graphics;
 
-use super::{audio::audio_manager::AudioManager, graphics::{texture_manager::TextureManager, util::{master_clock::{self, MasterClock}, master_graphics_list::MasterGraphicsList}}, input::key_states::KeyStates};
+use super::{graphics::{texture_manager::TextureManager, util::{master_clock::{self, MasterClock}, master_graphics_list::MasterGraphicsList}}, input::key_states::KeyStates};
 
 pub struct EngineController {
     glfw: glfw::Glfw,
@@ -16,7 +16,6 @@ pub struct EngineController {
     projection_matrix: Matrix4<f32>,
     texture_manager: Arc<RwLock<TextureManager>>,
     key_states: Arc<RwLock<KeyStates>>,
-    audio_manager: Arc<RwLock<AudioManager>>,
 }
 
 impl EngineController {
@@ -51,7 +50,6 @@ impl EngineController {
             projection_matrix,
             texture_manager: Arc::new(RwLock::new(TextureManager::new())),
             key_states: Arc::new(RwLock::new(KeyStates::new())),
-            audio_manager: Arc::new(RwLock::new(AudioManager::new())),
         }
     }
 
@@ -125,9 +123,5 @@ impl EngineController {
 
     pub fn get_key_states(&mut self) -> Arc<RwLock<KeyStates>> {
         return self.key_states.clone();
-    }
-
-    pub fn get_audio_manager(&mut self) -> Arc<RwLock<AudioManager>> {
-        return self.audio_manager.clone();
     }
 }

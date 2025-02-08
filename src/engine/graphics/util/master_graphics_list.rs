@@ -50,7 +50,7 @@ impl MasterGraphicsList {
     pub fn debug_all(&self) {
         let objects = self.objects.read().unwrap(); // Lock for reading the list
         for obj in objects.values() {
-            if let Ok(mut obj) = obj.read() { // Lock each object for writing (to update model matrix)
+            if let Ok(obj) = obj.read() { // Lock each object for writing (to update model matrix)
                 obj.print_debug();
             }
         }
