@@ -5,11 +5,10 @@ use nalgebra::Matrix4;
 
 use crate::framework::graphics;
 
-use super::graphics::{texture_manager::TextureManager, util::{master_clock::{self, MasterClock}, master_graphics_list::MasterGraphicsList}};
+use super::graphics::{texture_manager::TextureManager, util::master_graphics_list::MasterGraphicsList};
 
 pub struct FrameworkController {
     master_graphics_list: Arc<RwLock<MasterGraphicsList>>,
-    master_clock: Arc<RwLock<master_clock::MasterClock>>,
     projection_matrix: Matrix4<f32>,
     texture_manager: Arc<RwLock<TextureManager>>,
 }
@@ -24,7 +23,6 @@ impl FrameworkController {
 
         Self {
             master_graphics_list: Arc::new(RwLock::new(MasterGraphicsList::new())),
-            master_clock: Arc::new(RwLock::new(MasterClock::new())),
             projection_matrix,
             texture_manager: Arc::new(RwLock::new(TextureManager::new())),
         }
@@ -44,11 +42,7 @@ impl FrameworkController {
     }
 
     /// Returns true if the window should close
-    pub fn execute_tick(&mut self, window: &mut glfw::PWindow) {
-
-        // Update the clock
-        self.master_clock.write().unwrap().update();
-
+    pub fn render(&mut self, window: &mut glfw::PWindow) {
         // Render here
         unsafe {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0); // Set background color
@@ -68,10 +62,6 @@ impl FrameworkController {
 
     pub fn get_texture_manager(&mut self) -> Arc<RwLock<TextureManager>> {
         return self.texture_manager.clone();
-    }
-
-    pub fn get_master_clock(&self) -> Arc<RwLock<MasterClock>> {
-        return self.master_clock.clone();
     }
 
     pub fn get_master_graphics_list(&mut self) -> Arc<RwLock<MasterGraphicsList>> {
