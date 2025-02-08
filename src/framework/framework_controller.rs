@@ -44,7 +44,7 @@ impl FrameworkController {
     }
 
     /// Returns true if the window should close
-    pub fn execute_tick(&mut self, mut window: glfw::PWindow) {
+    pub fn execute_tick(&mut self, window: &mut glfw::PWindow) {
 
         // Update the clock
         self.master_clock.write().unwrap().update();
