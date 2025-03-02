@@ -1,9 +1,7 @@
-use std::sync::{Arc, RwLock};
 use nalgebra::Vector3;
 use crate::framework::graphics::internal_object::graphics_object::Generic2DGraphicsObject;
 
-pub fn move_object(object: Arc<RwLock<Generic2DGraphicsObject>>, direction: Vector3<f32>, speed: f32, delta_time: f32) {
-    let mut object = object.write().unwrap();
+pub fn move_object(object: &mut Generic2DGraphicsObject, direction: Vector3<f32>, speed: f32, delta_time: f32) {
     let mut pos = object.get_position();
 
     // Apply movement in the given direction
@@ -15,9 +13,7 @@ pub fn move_object(object: Arc<RwLock<Generic2DGraphicsObject>>, direction: Vect
 }
 
 // Rotate the object by a given angle (in radians).
-pub fn rotate_object(object: Arc<RwLock<Generic2DGraphicsObject>>, angle: f32) {
-    let mut object = object.write().unwrap();
-    
+pub fn rotate_object(object: &mut Generic2DGraphicsObject, angle: f32) {
     // Get the current rotation (in radians), assuming you have a method to retrieve it
     let mut current_rotation = object.get_rotation(); // This should return the current rotation in radians
 
