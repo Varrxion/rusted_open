@@ -1,11 +1,11 @@
 use nalgebra::Vector3;
 use crate::framework::graphics::internal_object::graphics_object::Generic2DGraphicsObject;
 
-pub fn move_object(object: &mut Generic2DGraphicsObject, direction: Vector3<f32>, speed: f32, delta_time: f32) {
+pub fn move_object(object: &mut Generic2DGraphicsObject, direction: Vector3<f32>, delta_time: f32) {
     let mut pos = object.get_position();
 
     // Apply movement in the given direction
-    pos += direction * speed * delta_time;
+    pos += direction * delta_time;
 
     // Update the position and model matrix
     object.set_position(pos);
