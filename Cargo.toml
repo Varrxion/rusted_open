@@ -6,7 +6,7 @@ edition = "2021"
 description = "Open source cross-platform rendering engine in Rust built on OpenGL"
 
 [dependencies]
-glfw = "0.58"
+glfw = "0.59"
 gl = "0.14.0"
-nalgebra = "0.33.1"
-image = "0.25.4"
+nalgebra = "0.33.2"
+image = "0.25.5"
