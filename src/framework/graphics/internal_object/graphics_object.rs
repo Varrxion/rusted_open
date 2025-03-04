@@ -15,6 +15,17 @@ pub struct Generic2DGraphicsObject {
     rotation: f32,
     scale: f32,
     model_matrix: Matrix4<f32>,
+
+    // Animation-related fields
+    is_animated: bool,
+    current_frame: usize,
+    num_frames: usize,
+    frame_duration: f32, // How long each frame stays visible (in seconds)
+    elapsed_time: f32, // Accumulated time for frame switching
+    atlas_columns: usize,
+    atlas_rows: usize,
+    frame_width: f32, // Width of one frame in the texture (sprite sheet / texture atlas)
+    frame_height: f32, // Height of one frame in the texture (sprite sheet / texture atlas)
 }
 
 impl Clone for Generic2DGraphicsObject {
@@ -31,6 +42,15 @@ impl Clone for Generic2DGraphicsObject {
             rotation: self.rotation,
             scale: self.scale,
             model_matrix: self.model_matrix,
+            is_animated: self.is_animated,
+            current_frame: self.current_frame,
+            num_frames: self.num_frames,
+            frame_duration: self.frame_duration,
+            elapsed_time: self.elapsed_time,
+            atlas_columns: self.atlas_columns,
+            atlas_rows: self.atlas_rows,
+            frame_width: self.frame_width,
+            frame_height: self.frame_height,
         }
     }
 }
@@ -46,7 +66,14 @@ impl Generic2DGraphicsObject {
         position: Vector3<f32>,
         rotation: f32,
         scale: f32,
-        texture_id: Option<GLuint>, // Accept texture ID as an argument
+        texture_id: Option<GLuint>,
+        is_animated: bool,
+        num_frames: usize,
+        frame_duration: f32,
+        atlas_columns: usize,
+        atlas_rows: usize,
+        frame_width: f32,
+        frame_height: f32,
     ) -> Self {
         let mut object = Self {
             name,
@@ -60,6 +87,15 @@ impl Generic2DGraphicsObject {
             rotation,
             scale,
             model_matrix: Matrix4::identity(), // Identity matrix for 2D
+            is_animated,
+            current_frame: 0,
+            num_frames,
+            frame_duration,
+            elapsed_time: 0.0,
+            atlas_columns,
+            atlas_rows,
+            frame_width,
+            frame_height,
         };
         object.initialize(texture_id); // Pass texture ID to initialize
         object
@@ -149,6 +185,44 @@ impl Generic2DGraphicsObject {
         let height = (max_y - min_y) * self.scale;
         
         (width, height)
+    }
+
+    // Update method to handle animation logic
+    pub fn update_animation(&mut self, delta_time: f32) {
+        if self.is_animated {
+            self.elapsed_time += delta_time;
+    
+            // If the accumulated time exceeds the frame duration, calculate how many frames should be skipped.
+            let frame_advance = (self.elapsed_time / self.frame_duration).floor() as usize;
+            self.current_frame = (self.current_frame + frame_advance) % self.num_frames;
+    
+            // Keep the remaining accumulated time (less than a frame duration).
+            self.elapsed_time = self.elapsed_time % self.frame_duration;
+    
+            self.update_texture_coords();
+        }
+    }
+    
+
+    // Update texture coordinates based on the current frame
+    pub fn update_texture_coords(&mut self) {
+        // Calculate the current frame's position in the atlas (grid)
+        let frame_x = (self.current_frame % self.atlas_columns) as f32;
+        let frame_y = (self.current_frame / self.atlas_columns) as f32;
+
+        // Calculate texture coordinates for the frame
+        let u1 = frame_x * self.frame_width;
+        let v1 = frame_y * self.frame_height;
+        let u2 = u1 + self.frame_width;
+        let v2 = v1 + self.frame_height;
+
+        // Update the texture coordinates for the current frame
+        self.texture_coords = vec![
+            u2, v1,
+            u2, v2,
+            u1, v2,
+            u1, v1,
+        ];
     }
 
     pub fn get_radius(&self) -> f32 {

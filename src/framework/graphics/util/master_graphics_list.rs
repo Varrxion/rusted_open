@@ -34,23 +34,24 @@ impl MasterGraphicsList {
         Arc::clone(&self.objects) // Return a clone of the Arc to allow shared access
     }
 
-    /// Draw all objects in the list
-    pub fn draw_all(&self, projection_matrix: &Matrix4<f32>) {
-        let objects = self.objects.read().unwrap(); // Lock for reading the list
+    /// Draw all objects in the list, delta_time is used for animation
+    pub fn draw_all(&self, projection_matrix: &Matrix4<f32>, delta_time: f32) {
+        let objects = self.objects.read().unwrap();
         for obj in objects.values() {
             if let Ok(mut obj) = obj.write() { // Lock each object for writing (to update model matrix)
+                obj.update_animation(delta_time);
                 obj.update_model_matrix(); // Update the model matrix first
                 obj.apply_transform(projection_matrix); // Apply the projection matrix
-                obj.draw(); // Now draw the object
+                obj.draw();
             }
         }
     }
 
     /// If we want to print ALL info for ALL objects
     pub fn debug_all(&self) {
-        let objects = self.objects.read().unwrap(); // Lock for reading the list
+        let objects = self.objects.read().unwrap();
         for obj in objects.values() {
-            if let Ok(obj) = obj.read() { // Lock each object for writing (to update model matrix)
+            if let Ok(obj) = obj.read() {
                 obj.print_debug();
             }
         }

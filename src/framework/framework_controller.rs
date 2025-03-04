@@ -67,7 +67,7 @@ impl FrameworkController {
     }
 
     /// Returns true if the window should close
-    pub fn render(&mut self, window: &mut glfw::PWindow) {
+    pub fn render(&mut self, window: &mut glfw::PWindow, delta_time: f32) {
         // Update the camera and projection
         self.camera.update_position(&self.master_graphics_list.read().unwrap());
         self.projection_matrix = Self::calculate_projection_matrix(self.width, self.height, &self.camera.get_position());
@@ -79,7 +79,7 @@ impl FrameworkController {
         }
 
         // Draw
-        self.master_graphics_list.write().unwrap().draw_all(&self.projection_matrix);
+        self.master_graphics_list.write().unwrap().draw_all(&self.projection_matrix, delta_time);
 
         // Swap buffers
         window.swap_buffers();
