@@ -58,6 +58,8 @@ impl FrameworkController {
 
     /// Sets the resolution of the openGL viewport and updates the projection matrix
     pub fn set_resolution(&mut self, width: f32, height: f32) {
+        self.width = width;
+        self.height = height;
         self.projection_matrix = Self::calculate_projection_matrix(width, height, &self.camera.get_position());
         unsafe {
             gl::Viewport(0, 0, width as i32, height as i32);  // Update the OpenGL viewport
@@ -93,5 +95,9 @@ impl FrameworkController {
 
     pub fn get_master_graphics_list(&mut self) -> Arc<RwLock<MasterGraphicsList>> {
         return self.master_graphics_list.clone();
+    }
+
+    pub fn set_camera_tracking_target(&mut self, target_name: String) {
+        self.camera.set_tracking_target(Some(target_name));
     }
 }
