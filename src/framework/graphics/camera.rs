@@ -29,12 +29,20 @@ impl Camera {
         // If no tracking target, stay at the default position (0,0)
     }
 
+    pub fn reset_position(&mut self) {
+        self.position = Vector2::new(0.0, 0.0);
+    }
+    
+
     pub fn set_tracking_target(&mut self, tracking_target: Option<String>) {
         self.tracking_target = tracking_target;
     }
 
-    // Method to update smoothing factor dynamically
     pub fn set_smoothing_factor(&mut self, smoothing_factor: f32) {
         self.smoothing_factor = smoothing_factor;
+    }
+
+    pub fn get_position(&self) -> Vector2<f32>{
+        return self.position;
     }
 }
