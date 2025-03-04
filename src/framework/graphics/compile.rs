@@ -23,15 +23,24 @@ fn compile_shader(source: &str, shader_type: GLenum) -> GLuint {
                 std::ptr::null_mut(),
                 info_log.as_mut_ptr() as *mut GLchar,
             );
-            panic!(
-                "Shader compilation failed: {}",
-                std::str::from_utf8(&info_log).unwrap()
-            );
+
+            // Print raw bytes if UTF-8 decoding fails
+            match std::str::from_utf8(&info_log) {
+                Ok(err_msg) => panic!("Shader compilation failed: {}", err_msg),
+                Err(_) => {
+                    // Printing the raw byte values to diagnose the issue
+                    panic!(
+                        "Shader compilation failed. Error log contains non-UTF-8 characters: {:?}",
+                        info_log
+                    );
+                }
+            }
         }
 
         shader
     }
 }
+
 
 pub fn create_shader_program(vertex_src: &str, fragment_src: &str) -> GLuint {
     unsafe {
