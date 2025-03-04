@@ -9,7 +9,6 @@ pub fn move_object(object: &mut Generic2DGraphicsObject, direction: Vector3<f32>
 
     // Update the position and model matrix
     object.set_position(pos);
-    object.update_model_matrix();
 }
 
 // Rotate the object by a given angle (in radians).
@@ -22,7 +21,4 @@ pub fn rotate_object(object: &mut Generic2DGraphicsObject, angle: f32) {
 
     // Set the new rotation
     object.set_rotation(current_rotation); // This should update the object's rotation
-
-    // Update the model matrix to reflect the new rotation
-    object.update_model_matrix();
 }
