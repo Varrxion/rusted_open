@@ -5,12 +5,13 @@ use nalgebra::Matrix4;
 
 use crate::framework::graphics;
 
-use super::graphics::{texture_manager::TextureManager, util::master_graphics_list::MasterGraphicsList};
+use super::graphics::{camera::Camera, texture_manager::TextureManager, util::master_graphics_list::MasterGraphicsList};
 
 pub struct FrameworkController {
     master_graphics_list: Arc<RwLock<MasterGraphicsList>>,
     projection_matrix: Matrix4<f32>,
     texture_manager: Arc<RwLock<TextureManager>>,
+    camera: Arc<RwLock<Camera>>,
 }
 
 impl FrameworkController {
@@ -25,6 +26,7 @@ impl FrameworkController {
             master_graphics_list: Arc::new(RwLock::new(MasterGraphicsList::new())),
             projection_matrix,
             texture_manager: Arc::new(RwLock::new(TextureManager::new())),
+            camera: Arc::new(RwLock::new(Camera::new(0.1)))
         }
     }
 
@@ -66,5 +68,9 @@ impl FrameworkController {
 
     pub fn get_master_graphics_list(&mut self) -> Arc<RwLock<MasterGraphicsList>> {
         return self.master_graphics_list.clone();
+    }
+
+    pub fn get_camera(&mut self) -> Arc<RwLock<Camera>> {
+        return self.camera.clone();
     }
 }
