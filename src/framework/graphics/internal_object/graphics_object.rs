@@ -68,6 +68,7 @@ impl Generic2DGraphicsObject {
         scale: f32,
         texture_id: Option<GLuint>,
         is_animated: bool,
+        current_frame: usize,
         num_frames: usize,
         frame_duration: f32,
         atlas_columns: usize,
@@ -88,7 +89,7 @@ impl Generic2DGraphicsObject {
             scale,
             model_matrix: Matrix4::identity(), // Identity matrix for 2D
             is_animated,
-            current_frame: 0,
+            current_frame,
             num_frames,
             frame_duration,
             elapsed_time: 0.0,
