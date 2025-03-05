@@ -103,6 +103,11 @@ impl Generic2DGraphicsObject {
     }
 
     fn initialize(&mut self, texture_id: Option<GLuint>) {
+        // Ensure the shader program is active before interacting with any attributes or uniforms
+        unsafe {
+            gl::UseProgram(self.shader_program);
+        }
+
         let mut vao = self.vao.write().unwrap(); // Lock the RwLock for mutable access
         // Bind the VAO
         vao.bind();
