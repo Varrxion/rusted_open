@@ -192,7 +192,7 @@ impl Generic2DGraphicsObject {
         (width, height)
     }
 
-    pub fn initilize_animation_properties(&mut self) {
+    pub fn initilize_animation_properties(&self) {
         unsafe {
             // Set the frame width and height (from the texture atlas)
             let frame_width_location = gl::GetUniformLocation(self.shader_program, CString::new("frameWidth").unwrap().as_ptr());
