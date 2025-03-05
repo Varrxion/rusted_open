@@ -188,19 +188,49 @@ impl Generic2DGraphicsObject {
         (width, height)
     }
 
+    pub fn initilize_animation_properties(&mut self) {
+        unsafe {
+            // Set the frame width and height (from the texture atlas)
+            let frame_width_location = gl::GetUniformLocation(self.shader_program, CString::new("frameWidth").unwrap().as_ptr());
+            gl::Uniform1f(frame_width_location, self.frame_width);
+
+            let frame_height_location = gl::GetUniformLocation(self.shader_program, CString::new("frameHeight").unwrap().as_ptr());
+            gl::Uniform1f(frame_height_location, self.frame_height);
+
+            // Set the number of columns and rows in the texture atlas
+            let atlas_columns_location = gl::GetUniformLocation(self.shader_program, CString::new("atlasColumns").unwrap().as_ptr());
+            gl::Uniform1f(atlas_columns_location, self.atlas_columns as f32);
+
+            let atlas_rows_location = gl::GetUniformLocation(self.shader_program, CString::new("atlasRows").unwrap().as_ptr());
+            gl::Uniform1f(atlas_rows_location, self.atlas_rows as f32);
+
+            // Set the current frame index
+            let current_frame_location = gl::GetUniformLocation(self.shader_program, CString::new("currentFrame").unwrap().as_ptr());
+            gl::Uniform1f(current_frame_location, self.current_frame as f32);
+        }
+    }
+
     // Update method to handle animation logic
     pub fn update_animation(&mut self, delta_time: f32) {
         if self.is_animated {
-            self.elapsed_time += delta_time;
-    
-            // If the accumulated time exceeds the frame duration, calculate how many frames should be skipped.
-            let frame_advance = (self.elapsed_time / self.frame_duration).floor() as usize;
-            self.current_frame = (self.current_frame + frame_advance) % self.num_frames;
-    
-            // Keep the remaining accumulated time (less than a frame duration).
-            self.elapsed_time = self.elapsed_time % self.frame_duration;
+            if self.frame_duration > 0.0 {
+                self.elapsed_time += delta_time;
+        
+                // If the accumulated time exceeds the frame duration, calculate how many frames should be skipped.
+                let frame_advance = (self.elapsed_time / self.frame_duration).floor() as usize;
+                self.current_frame = (self.current_frame + frame_advance) % self.num_frames;
+        
+                // Keep the remaining accumulated time (less than a frame duration).
+                self.elapsed_time = self.elapsed_time % self.frame_duration;
+            }
     
             self.update_texture_coords();
+
+            unsafe {
+                // Set the current frame index
+                let current_frame_location = gl::GetUniformLocation(self.shader_program, CString::new("currentFrame").unwrap().as_ptr());
+                gl::Uniform1f(current_frame_location, self.current_frame as f32);
+            }
         }
     }
     
