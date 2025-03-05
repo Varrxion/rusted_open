@@ -256,7 +256,7 @@ impl Generic2DGraphicsObject {
                 self.elapsed_time = self.elapsed_time % self.frame_duration;
             }
     
-            //self.update_texture_coords();
+            self.update_texture_coords();
 
             unsafe {
                 // Set the current frame index
@@ -295,8 +295,6 @@ impl Generic2DGraphicsObject {
         let mut tex_vbo = self.tex_vbo.write().unwrap();
         tex_vbo.update_data(&self.texture_coords);
     }
-    
-    
 
     pub fn get_radius(&self) -> f32 {
         self.vertex_data
