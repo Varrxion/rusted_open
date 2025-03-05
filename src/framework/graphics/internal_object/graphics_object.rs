@@ -214,6 +214,9 @@ impl Generic2DGraphicsObject {
             } else {
                 gl::Uniform1f(current_frame_location, self.current_frame as f32);
             }
+
+            // For animation debugging
+            println!("Set atlasColumns to {}, atlasRows to {}, and currentFrame to {}.", self.atlas_columns, self.atlas_rows, self.current_frame);
         }
     }
     
@@ -262,6 +265,9 @@ impl Generic2DGraphicsObject {
             u1, v2,
             u1, v1,
         ];
+
+        // For animation debugging
+        println!("Current Frame: {}, Current texture_coords to be passed into VBO:\n {}, {},\n {}, {},\n {}, {},\n {}, {}", self.current_frame,u2,v1,u2,v2,u1,v2,u1,v1);
 
         // Now update the texture VBO with the new texture coordinates
         self.update_texture_vbo();
