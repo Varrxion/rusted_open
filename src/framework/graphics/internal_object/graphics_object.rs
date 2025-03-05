@@ -24,6 +24,8 @@ pub struct Generic2DGraphicsObject {
     elapsed_time: f32, // Accumulated time for frame switching
     atlas_columns: usize,
     atlas_rows: usize,
+    frame_width: f32, // Width of one frame in the texture (sprite sheet / texture atlas)
+    frame_height: f32, // Height of one frame in the texture (sprite sheet / texture atlas)
 }
 
 impl Clone for Generic2DGraphicsObject {
@@ -47,6 +49,8 @@ impl Clone for Generic2DGraphicsObject {
             elapsed_time: self.elapsed_time,
             atlas_columns: self.atlas_columns,
             atlas_rows: self.atlas_rows,
+            frame_width: self.frame_width,
+            frame_height: self.frame_height,
         }
     }
 }
@@ -69,6 +73,8 @@ impl Generic2DGraphicsObject {
         frame_duration: f32,
         atlas_columns: usize,
         atlas_rows: usize,
+        frame_width: f32,
+        frame_height: f32,
     ) -> Self {
         let mut object = Self {
             name,
@@ -89,6 +95,8 @@ impl Generic2DGraphicsObject {
             elapsed_time: 0.0,
             atlas_columns,
             atlas_rows,
+            frame_width,
+            frame_height,
         };
         object.initialize(texture_id); // Pass texture ID to initialize
         object
@@ -190,7 +198,23 @@ impl Generic2DGraphicsObject {
     }
 
     pub fn initilize_animation_properties(&self) {
-        unsafe {    
+        unsafe {
+            // Get the uniform location for frame width
+            let frame_width_location = gl::GetUniformLocation(self.shader_program, CString::new("frameWidth").unwrap().as_ptr());
+            if frame_width_location == -1 {
+                println!("Error: uniform 'frameWidth' not found in shader!");
+            } else {
+                gl::Uniform1f(frame_width_location, self.frame_width);
+            }
+    
+            // Get the uniform location for frame height
+            let frame_height_location = gl::GetUniformLocation(self.shader_program, CString::new("frameHeight").unwrap().as_ptr());
+            if frame_height_location == -1 {
+                println!("Error: uniform 'frameHeight' not found in shader!");
+            } else {
+                gl::Uniform1f(frame_height_location, self.frame_height);
+            }
+    
             // Get the uniform location for number of columns in the atlas
             let atlas_columns_location = gl::GetUniformLocation(self.shader_program, CString::new("atlasColumns").unwrap().as_ptr());
             if atlas_columns_location == -1 {
