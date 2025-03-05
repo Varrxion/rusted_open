@@ -71,7 +71,7 @@ impl TextureManager {
 
     pub fn get_texture_id(&self, name: &str) -> Option<GLuint> {
         let textures = self.textures.read().unwrap();
-        textures.get(name).copied() // Return the texture ID if it exists
+        textures.get(name).copied().or_else(|| textures.get("MissingTexture").copied()) // Return the default missing texture if nothing with the given name is found
     }
 
     // New method to load all textures from a specified directory
