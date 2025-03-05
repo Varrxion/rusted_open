@@ -9,7 +9,7 @@ pub struct Generic2DGraphicsObject {
     texture_coords: Vec<f32>,
     vao: Arc<RwLock<VAO>>,
     position_vbo: Arc<VBO>, // VBO for positions
-    tex_vbo: Arc<VBO>, // VBO for texture coordinates
+    tex_vbo: Arc<RwLock<VBO>>, // VBO for texture coordinates
     shader_program: GLuint,
     position: nalgebra::Vector3<f32>,
     rotation: f32,
@@ -82,7 +82,7 @@ impl Generic2DGraphicsObject {
             texture_coords,
             vao: Arc::new(RwLock::new(VAO::new())), // Create a new VAO wrapped in RwLock
             position_vbo: Arc::new(VBO::new(&[])), // Placeholder for position VBO
-            tex_vbo: Arc::new(VBO::new(&[])), // Placeholder for texture VBO
+            tex_vbo: Arc::new(RwLock::new(VBO::new(&[]))), // Placeholder for texture VBO
             shader_program,
             position,
             rotation,
@@ -109,12 +109,12 @@ impl Generic2DGraphicsObject {
 
         // Initialize the VBOs with vertex data and texture coordinates
         self.position_vbo = Arc::new(VBO::new(&self.vertex_data)); // Initialize position VBO
-        self.tex_vbo = Arc::new(VBO::new(&self.texture_coords)); // Initialize texture VBO
+        self.tex_vbo = Arc::new(RwLock::new(VBO::new(&self.texture_coords))); // Initialize texture VBO
 
         // Setup vertex attributes for the VAO
         vao.setup_vertex_attributes(vec![
             (self.position_vbo.id(), 2, 0), // Position VBO
-            (self.tex_vbo.id(), 2, 1),       // Texture coordinate VBO
+            (self.tex_vbo.read().unwrap().id(), 2, 1),       // Texture coordinate VBO
         ], texture_id); // Pass texture ID dynamically
 
         if self.uses_atlas {
@@ -287,14 +287,10 @@ impl Generic2DGraphicsObject {
     }
 
     fn update_texture_vbo(&mut self) {
-        // Lock the Arc to get a mutable reference to the VBO
-        if let Some(vbo) = Arc::get_mut(&mut self.tex_vbo) {
-            vbo.update_data(&self.texture_coords); // Update the VBO with the new texture coordinates
-        } else {
-            // Handle case where the Arc is not uniquely owned (shared references exist)
-            println!("Failed to get a mutable reference to the texture VBO.");
-        }
+        let mut tex_vbo = self.tex_vbo.write().unwrap();
+        tex_vbo.update_data(&self.texture_coords);
     }
+    
     
 
     pub fn get_radius(&self) -> f32 {
@@ -347,6 +343,6 @@ impl Generic2DGraphicsObject {
         println!("Scale: {}", self.scale);
         println!("Model Matrix: {:?}", self.model_matrix);
         println!("Position VBO ID: {}", self.position_vbo.id());
-        println!("Texture VBO ID: {}\n", self.tex_vbo.id());
+        println!("Texture VBO ID: {}\n", self.tex_vbo.read().unwrap().id());
     }
 }
