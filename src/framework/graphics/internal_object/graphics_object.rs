@@ -276,8 +276,8 @@ impl Generic2DGraphicsObject {
         // Calculate texture coordinates for the frame
         let u1 = frame_x;
         let v1 = frame_y;
-        let u2 = u1;
-        let v2 = v1;
+        let u2 = u1 + 1.0;
+        let v2 = v1 + 1.0;
 
         // Update the texture coordinates for the current frame
         self.texture_coords = vec![
