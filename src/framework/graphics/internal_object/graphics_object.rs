@@ -194,25 +194,48 @@ impl Generic2DGraphicsObject {
 
     pub fn initilize_animation_properties(&self) {
         unsafe {
-            // Set the frame width and height (from the texture atlas)
+            // Get the uniform location for frame width
             let frame_width_location = gl::GetUniformLocation(self.shader_program, CString::new("frameWidth").unwrap().as_ptr());
-            gl::Uniform1f(frame_width_location, self.frame_width);
-
+            if frame_width_location == -1 {
+                println!("Error: uniform 'frameWidth' not found in shader!");
+            } else {
+                gl::Uniform1f(frame_width_location, self.frame_width);
+            }
+    
+            // Get the uniform location for frame height
             let frame_height_location = gl::GetUniformLocation(self.shader_program, CString::new("frameHeight").unwrap().as_ptr());
-            gl::Uniform1f(frame_height_location, self.frame_height);
-
-            // Set the number of columns and rows in the texture atlas
+            if frame_height_location == -1 {
+                println!("Error: uniform 'frameHeight' not found in shader!");
+            } else {
+                gl::Uniform1f(frame_height_location, self.frame_height);
+            }
+    
+            // Get the uniform location for number of columns in the atlas
             let atlas_columns_location = gl::GetUniformLocation(self.shader_program, CString::new("atlasColumns").unwrap().as_ptr());
-            gl::Uniform1f(atlas_columns_location, self.atlas_columns as f32);
-
+            if atlas_columns_location == -1 {
+                println!("Error: uniform 'atlasColumns' not found in shader!");
+            } else {
+                gl::Uniform1f(atlas_columns_location, self.atlas_columns as f32);
+            }
+    
+            // Get the uniform location for number of rows in the atlas
             let atlas_rows_location = gl::GetUniformLocation(self.shader_program, CString::new("atlasRows").unwrap().as_ptr());
-            gl::Uniform1f(atlas_rows_location, self.atlas_rows as f32);
-
-            // Set the current frame index
+            if atlas_rows_location == -1 {
+                println!("Error: uniform 'atlasRows' not found in shader!");
+            } else {
+                gl::Uniform1f(atlas_rows_location, self.atlas_rows as f32);
+            }
+    
+            // Get the uniform location for the current frame
             let current_frame_location = gl::GetUniformLocation(self.shader_program, CString::new("currentFrame").unwrap().as_ptr());
-            gl::Uniform1f(current_frame_location, self.current_frame as f32);
+            if current_frame_location == -1 {
+                println!("Error: uniform 'currentFrame' not found in shader!");
+            } else {
+                gl::Uniform1f(current_frame_location, self.current_frame as f32);
+            }
         }
     }
+    
 
     // Update method to handle animation logic
     pub fn update_animation(&mut self, delta_time: f32) {
