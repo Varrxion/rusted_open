@@ -249,15 +249,11 @@ impl Generic2DGraphicsObject {
         let frame_x = (self.current_frame % self.atlas_columns) as f32;
         let frame_y = (self.current_frame / self.atlas_columns) as f32;
 
-        // Calculate tile size in normalized texture space
-        let tile_width = 1.0 / self.atlas_columns as f32;
-        let tile_height = 1.0 / self.atlas_rows as f32;
-
-        // Compute normalized texture coordinates
-        let u1 = frame_x * tile_width;
-        let v1 = frame_y * tile_height;
-        let u2 = u1 + tile_width;
-        let v2 = v1 + tile_height;
+        // Calculate texture coordinates for the frame
+        let u1 = frame_x;
+        let v1 = frame_y;
+        let u2 = u1 + 1.0;
+        let v2 = v1 + 1.0;
 
         // Update the texture coordinates for the current frame
         self.texture_coords = vec![
@@ -267,10 +263,9 @@ impl Generic2DGraphicsObject {
             u1, v1,
         ];
 
-        // Update the texture VBO with the new texture coordinates
+        // Now update the texture VBO with the new texture coordinates
         self.update_texture_vbo();
     }
-
 
     fn update_texture_vbo(&mut self) {
         let mut tex_vbo = self.tex_vbo.write().unwrap();
