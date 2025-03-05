@@ -256,7 +256,7 @@ impl Generic2DGraphicsObject {
                 self.elapsed_time = self.elapsed_time % self.frame_duration;
             }
     
-            self.update_texture_coords();
+            //self.update_texture_coords();
 
             unsafe {
                 // Set the current frame index
