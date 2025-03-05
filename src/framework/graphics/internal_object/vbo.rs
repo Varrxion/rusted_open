@@ -35,6 +35,25 @@ impl VBO {
         }
     }
 
+    /// Updates the data in the VBO with new vertex data.
+    pub fn update_data(&mut self, data: &[f32]) {
+        unsafe {
+            // Bind the buffer to update its contents
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
+
+            // Update the VBO data with the new data
+            gl::BufferSubData(
+                gl::ARRAY_BUFFER,
+                0,  // Offset at which to start updating
+                (data.len() * std::mem::size_of::<f32>()) as GLsizeiptr,  // Size of the data to update
+                data.as_ptr() as *const GLvoid,  // Pointer to the new data
+            );
+
+            // Unbind the buffer to avoid accidental modification
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+        }
+    }
+
     /// Returns the VBO ID.
     pub fn id(&self) -> GLuint {
         self.id

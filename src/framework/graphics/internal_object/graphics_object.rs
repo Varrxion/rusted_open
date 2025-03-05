@@ -17,7 +17,7 @@ pub struct Generic2DGraphicsObject {
     model_matrix: Matrix4<f32>,
 
     // Animation-related fields
-    is_animated: bool,
+    uses_atlas: bool,
     current_frame: usize,
     num_frames: usize,
     frame_duration: f32, // How long each frame stays visible (in seconds)
@@ -42,7 +42,7 @@ impl Clone for Generic2DGraphicsObject {
             rotation: self.rotation,
             scale: self.scale,
             model_matrix: self.model_matrix,
-            is_animated: self.is_animated,
+            uses_atlas: self.uses_atlas,
             current_frame: self.current_frame,
             num_frames: self.num_frames,
             frame_duration: self.frame_duration,
@@ -67,7 +67,7 @@ impl Generic2DGraphicsObject {
         rotation: f32,
         scale: f32,
         texture_id: Option<GLuint>,
-        is_animated: bool,
+        uses_atlas: bool,
         current_frame: usize,
         num_frames: usize,
         frame_duration: f32,
@@ -88,7 +88,7 @@ impl Generic2DGraphicsObject {
             rotation,
             scale,
             model_matrix: Matrix4::identity(), // Identity matrix for 2D
-            is_animated,
+            uses_atlas,
             current_frame,
             num_frames,
             frame_duration,
@@ -212,7 +212,7 @@ impl Generic2DGraphicsObject {
 
     // Update method to handle animation logic
     pub fn update_animation(&mut self, delta_time: f32) {
-        if self.is_animated {
+        if self.uses_atlas {
             if self.frame_duration > 0.0 {
                 self.elapsed_time += delta_time;
         
@@ -254,7 +254,21 @@ impl Generic2DGraphicsObject {
             u1, v2,
             u1, v1,
         ];
+
+        // Now update the texture VBO with the new texture coordinates
+        self.update_texture_vbo();
     }
+
+    fn update_texture_vbo(&mut self) {
+        // Lock the Arc to get a mutable reference to the VBO
+        if let Some(vbo) = Arc::get_mut(&mut self.tex_vbo) {
+            vbo.update_data(&self.texture_coords); // Update the VBO with the new texture coordinates
+        } else {
+            // Handle case where the Arc is not uniquely owned (shared references exist)
+            println!("Failed to get a mutable reference to the texture VBO.");
+        }
+    }
+    
 
     pub fn get_radius(&self) -> f32 {
         self.vertex_data
