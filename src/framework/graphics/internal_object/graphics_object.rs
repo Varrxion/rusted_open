@@ -117,6 +117,10 @@ impl Generic2DGraphicsObject {
             (self.tex_vbo.id(), 2, 1),       // Texture coordinate VBO
         ], texture_id); // Pass texture ID dynamically
 
+        if self.uses_atlas {
+            self.initilize_animation_properties();
+        }
+
         // Unbind the VAO
         VAO::unbind();
     }
