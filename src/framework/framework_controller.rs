@@ -27,6 +27,12 @@ impl FrameworkController {
         // Load OpenGL functions
         graphics::glfw::load_gl_symbols();
 
+        unsafe {
+            gl::Enable(gl::DEPTH_TEST);
+            gl::DepthFunc(gl::LESS);
+            gl::ClearDepth(1.0);
+        }
+
         Self {
             master_graphics_list: Arc::new(RwLock::new(MasterGraphicsList::new())),
             projection_matrix,
@@ -75,7 +81,7 @@ impl FrameworkController {
         // Render here
         unsafe {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0); // Set background color
-            gl::Clear(gl::COLOR_BUFFER_BIT);    // Clear the screen
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);    // Clear the screen + depth buffer
         }
 
         // Draw
