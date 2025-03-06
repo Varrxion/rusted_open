@@ -213,7 +213,6 @@ impl Generic2DGraphicsObject {
                         _ => atlas_config.current_frame, // No animation or unrecognized mode
                     };
                 }
-                println!("Current Frame: {}", atlas_config.current_frame);
             }
             self.update_texture_coords();
         }
