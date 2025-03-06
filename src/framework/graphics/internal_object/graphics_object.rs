@@ -206,14 +206,6 @@ impl Generic2DGraphicsObject {
             } else {
                 gl::Uniform1f(atlas_rows_location, self.atlas_rows as f32);
             }
-    
-            // Get the uniform location for the current frame
-            let current_frame_location = gl::GetUniformLocation(self.shader_program, CString::new("currentFrame").unwrap().as_ptr());
-            if current_frame_location == -1 {
-                println!("Error: uniform 'currentFrame' not found in shader!");
-            } else {
-                gl::Uniform1f(current_frame_location, self.current_frame as f32);
-            }
 
             // For animation debugging
             //println!("Set atlasColumns to {}, atlasRows to {}, and currentFrame to {}.", self.atlas_columns, self.atlas_rows, self.current_frame);
@@ -236,12 +228,6 @@ impl Generic2DGraphicsObject {
             }
     
             self.update_texture_coords();
-
-            unsafe {
-                // Set the current frame index
-                let current_frame_location = gl::GetUniformLocation(self.shader_program, CString::new("currentFrame").unwrap().as_ptr());
-                gl::Uniform1f(current_frame_location, self.current_frame as f32);
-            }
         }
     }
     
