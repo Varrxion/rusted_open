@@ -1,6 +1,6 @@
 use gl::types::GLuint;
 use nalgebra::{Matrix4, Vector3};
-use std::{ffi::CString, sync::{Arc, RwLock}};
+use std::{ffi::CString, ops::Range, sync::{Arc, RwLock}};
 use super::{vao::VAO, vbo::VBO};
 
 pub struct Generic2DGraphicsObject {
@@ -19,7 +19,7 @@ pub struct Generic2DGraphicsObject {
     // Animation-related fields
     uses_atlas: bool,
     current_frame: usize,
-    num_frames: usize,
+    frame_range: Range<usize>,
     frame_duration: f32, // How long each frame stays visible (in seconds)
     elapsed_time: f32, // Accumulated time for frame switching
     atlas_columns: usize,
@@ -42,7 +42,7 @@ impl Clone for Generic2DGraphicsObject {
             model_matrix: self.model_matrix,
             uses_atlas: self.uses_atlas,
             current_frame: self.current_frame,
-            num_frames: self.num_frames,
+            frame_range: self.frame_range.clone(),
             frame_duration: self.frame_duration,
             elapsed_time: self.elapsed_time,
             atlas_columns: self.atlas_columns,
@@ -65,7 +65,7 @@ impl Generic2DGraphicsObject {
         texture_id: Option<GLuint>,
         uses_atlas: bool,
         current_frame: usize,
-        num_frames: usize,
+        frame_range: Range<usize>,
         frame_duration: f32,
         atlas_columns: usize,
         atlas_rows: usize,
@@ -84,7 +84,7 @@ impl Generic2DGraphicsObject {
             model_matrix: Matrix4::identity(), // Identity matrix for 2D
             uses_atlas,
             current_frame,
-            num_frames,
+            frame_range,
             frame_duration,
             elapsed_time: 0.0,
             atlas_columns,
@@ -219,17 +219,23 @@ impl Generic2DGraphicsObject {
             if self.frame_duration > 0.0 {
                 self.elapsed_time += delta_time;
         
-                // If the accumulated time exceeds the frame duration, calculate how many frames should be skipped.
                 let frame_advance = (self.elapsed_time / self.frame_duration).floor() as usize;
-                self.current_frame = (self.current_frame + frame_advance) % self.num_frames;
         
-                // Keep the remaining accumulated time (less than a frame duration).
-                self.elapsed_time = self.elapsed_time % self.frame_duration;
+                if frame_advance > 0 {
+                    self.elapsed_time %= self.frame_duration;
+        
+                    let new_frame = self.current_frame + frame_advance;
+                    self.current_frame = if new_frame >= self.frame_range.end {
+                        self.frame_range.start + (new_frame - self.frame_range.start) % (self.frame_range.end - self.frame_range.start)
+                    } else {
+                        new_frame
+                    };
+                }
             }
-    
             self.update_texture_coords();
         }
     }
+    
     
 
     // Update texture coordinates based on the current frame
