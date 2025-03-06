@@ -1,7 +1,7 @@
 use gl::types::GLuint;
 use nalgebra::{Matrix4, Vector3};
-use std::{ffi::CString, ops::Range, sync::{Arc, RwLock}};
-use super::{vao::VAO, vbo::VBO};
+use std::{ffi::CString, sync::{Arc, RwLock}};
+use super::{animation::{backward_animation, forward_animation, random_animation}, animation_config::AnimationConfig, atlas_config::AtlasConfig, vao::VAO, vbo::VBO};
 
 pub struct Generic2DGraphicsObject {
     name: String,
@@ -15,15 +15,9 @@ pub struct Generic2DGraphicsObject {
     rotation: f32,
     scale: f32,
     model_matrix: Matrix4<f32>,
-
-    // Animation-related fields
-    uses_atlas: bool,
-    current_frame: usize,
-    frame_range: Range<usize>,
-    frame_duration: f32, // How long each frame stays visible (in seconds)
-    elapsed_time: f32, // Accumulated time for frame switching
-    atlas_columns: usize,
-    atlas_rows: usize,
+    atlas_config: Option<AtlasConfig>,
+    animation_config: Option<AnimationConfig>,
+    elapsed_time: f32,
 }
 
 impl Clone for Generic2DGraphicsObject {
@@ -40,13 +34,9 @@ impl Clone for Generic2DGraphicsObject {
             rotation: self.rotation,
             scale: self.scale,
             model_matrix: self.model_matrix,
-            uses_atlas: self.uses_atlas,
-            current_frame: self.current_frame,
-            frame_range: self.frame_range.clone(),
-            frame_duration: self.frame_duration,
+            atlas_config: self.atlas_config.clone(),
+            animation_config: self.animation_config.clone(),
             elapsed_time: self.elapsed_time,
-            atlas_columns: self.atlas_columns,
-            atlas_rows: self.atlas_rows,
         }
     }
 }
@@ -63,12 +53,8 @@ impl Generic2DGraphicsObject {
         rotation: f32,
         scale: f32,
         texture_id: Option<GLuint>,
-        uses_atlas: bool,
-        current_frame: usize,
-        frame_range: Range<usize>,
-        frame_duration: f32,
-        atlas_columns: usize,
-        atlas_rows: usize,
+        atlas_config: Option<AtlasConfig>,
+        animation_config: Option<AnimationConfig>,
     ) -> Self {
         let mut object = Self {
             name,
@@ -82,13 +68,9 @@ impl Generic2DGraphicsObject {
             rotation,
             scale,
             model_matrix: Matrix4::identity(), // Identity matrix for 2D
-            uses_atlas,
-            current_frame,
-            frame_range,
-            frame_duration,
+            atlas_config,
+            animation_config,
             elapsed_time: 0.0,
-            atlas_columns,
-            atlas_rows,
         };
         object.initialize(texture_id); // Pass texture ID to initialize
         object
@@ -114,8 +96,8 @@ impl Generic2DGraphicsObject {
             (self.tex_vbo.read().unwrap().id(), 2, 1),       // Texture coordinate VBO
         ], texture_id); // Pass texture ID dynamically
 
-        if self.uses_atlas {
-            self.initilize_animation_properties();
+        if let Some(atlas_config) = &self.atlas_config {
+            self.initilize_animation_properties(&atlas_config);
         }
 
         // Unbind the VAO
@@ -189,14 +171,14 @@ impl Generic2DGraphicsObject {
         (width, height)
     }
 
-    pub fn initilize_animation_properties(&self) {
+    pub fn initilize_animation_properties(&self, atlas_config: &AtlasConfig) {
         unsafe {    
             // Get the uniform location for number of columns in the atlas
             let atlas_columns_location = gl::GetUniformLocation(self.shader_program, CString::new("atlasColumns").unwrap().as_ptr());
             if atlas_columns_location == -1 {
                 println!("Error: uniform 'atlasColumns' not found in shader!");
             } else {
-                gl::Uniform1f(atlas_columns_location, self.atlas_columns as f32);
+                gl::Uniform1f(atlas_columns_location, atlas_config.atlas_columns as f32);
             }
     
             // Get the uniform location for number of rows in the atlas
@@ -204,65 +186,66 @@ impl Generic2DGraphicsObject {
             if atlas_rows_location == -1 {
                 println!("Error: uniform 'atlasRows' not found in shader!");
             } else {
-                gl::Uniform1f(atlas_rows_location, self.atlas_rows as f32);
+                gl::Uniform1f(atlas_rows_location, atlas_config.atlas_rows as f32);
             }
 
             // For animation debugging
-            //println!("Set atlasColumns to {}, atlasRows to {}, and currentFrame to {}.", self.atlas_columns, self.atlas_rows, self.current_frame);
+            //println!("Set atlasColumns to {}, atlasRows to {}.", self.atlas_columns, self.atlas_rows);
         }
     }
     
 
     // Update method to handle animation logic
     pub fn update_animation(&mut self, delta_time: f32) {
-        if self.uses_atlas {
-            if self.frame_duration > 0.0 {
+        if let Some(atlas_config) = &mut self.atlas_config {
+            if let Some(animation_config) = &self.animation_config {
                 self.elapsed_time += delta_time;
-        
-                let frame_advance = (self.elapsed_time / self.frame_duration).floor() as usize;
-        
+    
+                let frame_advance = (self.elapsed_time / animation_config.frame_duration).floor() as usize;
+    
                 if frame_advance > 0 {
-                    self.elapsed_time %= self.frame_duration;
-        
-                    let new_frame = self.current_frame + frame_advance;
-                    self.current_frame = if new_frame >= self.frame_range.end {
-                        self.frame_range.start + (new_frame - self.frame_range.start) % (self.frame_range.end - self.frame_range.start)
-                    } else {
-                        new_frame
+                    self.elapsed_time %= animation_config.frame_duration;
+    
+                    atlas_config.current_frame = match animation_config.mode.as_str() {
+                        "forward" => forward_animation(frame_advance, &atlas_config, &animation_config),
+                        "backward" => backward_animation(frame_advance, &atlas_config, &animation_config),
+                        "random" => random_animation(&animation_config),
+                        _ => atlas_config.current_frame, // No animation or unrecognized mode
                     };
                 }
+                println!("Current Frame: {}", atlas_config.current_frame);
             }
             self.update_texture_coords();
         }
     }
-    
-    
 
     // Update texture coordinates based on the current frame
     pub fn update_texture_coords(&mut self) {
-        // Calculate the current frame's position in the atlas (grid)
-        let frame_x = (self.current_frame % self.atlas_columns) as f32;
-        let frame_y = (self.current_frame / self.atlas_columns) as f32;
+        if let Some(atlas_config) = &mut self.atlas_config {
+            // Calculate the current frame's position in the atlas (grid)
+            let frame_x = (atlas_config.current_frame % atlas_config.atlas_columns) as f32;
+            let frame_y = (atlas_config.current_frame / atlas_config.atlas_columns) as f32;
 
-        // Calculate texture coordinates for the frame
-        let u1 = frame_x;
-        let v1 = frame_y;
-        let u2 = u1 + 1.0;
-        let v2 = v1 + 1.0;
+            // Calculate texture coordinates for the frame
+            let u1 = frame_x;
+            let v1 = frame_y;
+            let u2 = u1 + 1.0;
+            let v2 = v1 + 1.0;
 
-        // Update the texture coordinates for the current frame
-        self.texture_coords = vec![
-            u2, v1,
-            u2, v2,
-            u1, v2,
-            u1, v1,
-        ];
+            // Update the texture coordinates for the current frame
+            self.texture_coords = vec![
+                u2, v1,
+                u2, v2,
+                u1, v2,
+                u1, v1,
+            ];
 
-        // For animation debugging
-        //println!("Current Frame: {}, Current texture_coords to be passed into VBO:\n {}, {},\n {}, {},\n {}, {},\n {}, {}", self.current_frame,u2,v1,u2,v2,u1,v2,u1,v1);
+            // For animation debugging
+            //println!("Current Frame: {}, Current texture_coords to be passed into VBO:\n {}, {},\n {}, {},\n {}, {},\n {}, {}", self.current_frame,u2,v1,u2,v2,u1,v2,u1,v1);
 
-        // Now update the texture VBO with the new texture coordinates
-        self.update_texture_vbo();
+            // Now update the texture VBO with the new texture coordinates
+            self.update_texture_vbo();
+        }
     }
 
     fn update_texture_vbo(&mut self) {
