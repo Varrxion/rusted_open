@@ -263,6 +263,22 @@ impl Generic2DGraphicsObject {
         &self.name
     }
 
+    pub fn get_atlas_config(&self) -> Option<AtlasConfig> {
+        self.atlas_config.clone()
+    }
+
+    pub fn get_animation_config(&self) -> Option<AnimationConfig> {
+        self.animation_config.clone()
+    }
+
+    pub fn set_atlas_config(&mut self, atlas_config: Option<AtlasConfig>) {
+        self.atlas_config = atlas_config;
+    }
+
+    pub fn set_animation_config(&mut self, animation_config: Option<AnimationConfig>) {
+        self.animation_config = animation_config;
+    }
+
     pub fn set_position(&mut self, position: nalgebra::Vector3<f32>) {
         self.position = position;
     }
