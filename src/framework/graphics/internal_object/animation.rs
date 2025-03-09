@@ -1,8 +1,13 @@
 use super::{animation_config::AnimationConfig, atlas_config::AtlasConfig};
 
-pub fn forward_animation(frame_advance: usize, atlas_config: &AtlasConfig, animation_config: &AnimationConfig) -> usize {
+pub fn forward_animation(frame_advance: usize, atlas_config: &mut AtlasConfig, animation_config: &AnimationConfig) -> usize {
+    if atlas_config.current_frame < animation_config.frame_range.start {
+        atlas_config.current_frame = animation_config.frame_range.start;
+        return atlas_config.current_frame;
+    }
+    
     let new_frame = atlas_config.current_frame + frame_advance;
-
+    
     if animation_config.looping {
         return if new_frame >= animation_config.frame_range.end {
             animation_config.frame_range.start + (new_frame - animation_config.frame_range.start) % (animation_config.frame_range.end - animation_config.frame_range.start)
@@ -19,7 +24,12 @@ pub fn forward_animation(frame_advance: usize, atlas_config: &AtlasConfig, anima
 }
 
 
-pub fn backward_animation(frame_advance: usize, atlas_config: &AtlasConfig, animation_config: &AnimationConfig) -> usize {
+pub fn backward_animation(frame_advance: usize, atlas_config: &mut AtlasConfig, animation_config: &AnimationConfig) -> usize {
+    if atlas_config.current_frame > animation_config.frame_range.end {
+        atlas_config.current_frame = animation_config.frame_range.end;
+        return atlas_config.current_frame;
+    }
+
     let new_frame = if atlas_config.current_frame >= frame_advance {
         atlas_config.current_frame - frame_advance
     } else {

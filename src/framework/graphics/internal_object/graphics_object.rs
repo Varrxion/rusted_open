@@ -207,8 +207,8 @@ impl Generic2DGraphicsObject {
                     self.elapsed_time %= animation_config.frame_duration;
     
                     atlas_config.current_frame = match animation_config.mode.as_str() {
-                        "forward" => forward_animation(frame_advance, &atlas_config, &animation_config),
-                        "backward" => backward_animation(frame_advance, &atlas_config, &animation_config),
+                        "forward" => forward_animation(frame_advance, atlas_config, animation_config),
+                        "backward" => backward_animation(frame_advance, atlas_config, animation_config),
                         "random" => random_animation(&animation_config),
                         _ => atlas_config.current_frame, // No animation or unrecognized mode
                     };
