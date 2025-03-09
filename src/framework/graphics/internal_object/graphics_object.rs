@@ -199,19 +199,21 @@ impl Generic2DGraphicsObject {
     pub fn update_animation(&mut self, delta_time: f32) {
         if let Some(atlas_config) = &mut self.atlas_config {
             if let Some(animation_config) = &self.animation_config {
-                self.elapsed_time += delta_time;
-    
-                let frame_advance = (self.elapsed_time / animation_config.frame_duration).floor() as usize;
-    
-                if frame_advance > 0 {
-                    self.elapsed_time %= animation_config.frame_duration;
-    
-                    atlas_config.current_frame = match animation_config.mode.as_str() {
-                        "forward" => forward_animation(frame_advance, atlas_config, animation_config),
-                        "backward" => backward_animation(frame_advance, atlas_config, animation_config),
-                        "random" => random_animation(&animation_config),
-                        _ => atlas_config.current_frame, // No animation or unrecognized mode
-                    };
+                if animation_config.frame_duration != 0.0 {
+                    self.elapsed_time += delta_time;
+        
+                    let frame_advance = (self.elapsed_time / animation_config.frame_duration).floor() as usize;
+        
+                    if frame_advance > 0 {
+                        self.elapsed_time %= animation_config.frame_duration;
+        
+                        atlas_config.current_frame = match animation_config.mode.as_str() {
+                            "forward" => forward_animation(frame_advance, atlas_config, animation_config),
+                            "backward" => backward_animation(frame_advance, atlas_config, animation_config),
+                            "random" => random_animation(&animation_config),
+                            _ => atlas_config.current_frame, // No animation or unrecognized mode
+                        };
+                    }
                 }
             }
             self.update_texture_coords();
