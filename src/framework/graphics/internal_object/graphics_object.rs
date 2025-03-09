@@ -1,7 +1,7 @@
 use gl::types::GLuint;
 use nalgebra::{Matrix4, Vector3};
 use std::{ffi::CString, sync::{Arc, RwLock}};
-use super::{animation::{backward_animation, forward_animation, random_animation}, animation_config::AnimationConfig, atlas_config::AtlasConfig, vao::VAO, vbo::VBO};
+use super::{animation::{backward_animation, forward_animation, random_animation}, animation_config::AnimationConfig, atlas_config::AtlasConfig, tiling_config::TilingConfig, vao::VAO, vbo::VBO};
 
 pub struct Generic2DGraphicsObject {
     name: String,
@@ -15,6 +15,7 @@ pub struct Generic2DGraphicsObject {
     rotation: f32,
     scale: f32,
     model_matrix: Matrix4<f32>,
+    tiling_config: Option<TilingConfig>,
     atlas_config: Option<AtlasConfig>,
     animation_config: Option<AnimationConfig>,
     elapsed_time: f32,
@@ -34,6 +35,7 @@ impl Clone for Generic2DGraphicsObject {
             rotation: self.rotation,
             scale: self.scale,
             model_matrix: self.model_matrix,
+            tiling_config: self.tiling_config.clone(),
             atlas_config: self.atlas_config.clone(),
             animation_config: self.animation_config.clone(),
             elapsed_time: self.elapsed_time,
@@ -53,6 +55,7 @@ impl Generic2DGraphicsObject {
         rotation: f32,
         scale: f32,
         texture_id: Option<GLuint>,
+        tiling_config: Option<TilingConfig>,
         atlas_config: Option<AtlasConfig>,
         animation_config: Option<AnimationConfig>,
     ) -> Self {
@@ -68,6 +71,7 @@ impl Generic2DGraphicsObject {
             rotation,
             scale,
             model_matrix: Matrix4::identity(), // Identity matrix for 2D
+            tiling_config,
             atlas_config,
             animation_config,
             elapsed_time: 0.0,
@@ -234,24 +238,24 @@ impl Generic2DGraphicsObject {
             let v2 = v1 + 1.0;
 
             // Update the texture coordinates for the current frame
-            self.texture_coords = vec![
-                u2, v1,
-                u2, v2,
-                u1, v2,
-                u1, v1,
-            ];
+            let texture_coords = vec![
+                    u2, v1,
+                    u2, v2,
+                    u1, v2,
+                    u1, v1,
+                ];
 
             // For animation debugging
-            //println!("Current Frame: {}, Current texture_coords to be passed into VBO:\n {}, {},\n {}, {},\n {}, {},\n {}, {}", self.current_frame,u2,v1,u2,v2,u1,v2,u1,v1);
+            println!("Current Frame: {}, Current texture_coords to be passed into VBO:\n {}, {},\n {}, {},\n {}, {},\n {}, {}", self.atlas_config.clone().unwrap().current_frame, u2,v1,u2,v2,u1,v2,u1,v1);
 
             // Now update the texture VBO with the new texture coordinates
-            self.update_texture_vbo();
+            self.update_texture_vbo(texture_coords);
         }
     }
 
-    fn update_texture_vbo(&mut self) {
+    fn update_texture_vbo(&mut self, texture_coords: Vec<f32>) {
         let mut tex_vbo = self.tex_vbo.write().unwrap();
-        tex_vbo.update_data(&self.texture_coords);
+        tex_vbo.update_data(&texture_coords);
     }
 
     pub fn get_radius(&self) -> f32 {
