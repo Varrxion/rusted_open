@@ -1,9 +1,9 @@
 use std::ops::Range;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Serialize, Debug, Clone, Deserialize)]
 pub struct AnimationConfig {
     pub looping: bool,
     pub mode: String,
