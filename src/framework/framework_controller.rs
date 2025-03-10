@@ -43,7 +43,7 @@ impl FrameworkController {
         }
     }
 
-    fn calculate_projection_matrix(width: f32, height: f32, camera_position: &Vector2<f32>) -> Matrix4<f32> {
+    fn calculate_projection_matrix(width: f32, height: f32, camera_position: &Vector3<f32>) -> Matrix4<f32> {
         let aspect_ratio = width / height;
         
         // Create an orthogonal projection matrix
@@ -52,8 +52,10 @@ impl FrameworkController {
         // Create a view matrix that translates the world by the negative camera position
         let translation = Matrix4::new_translation(&Vector3::new(-camera_position.x, -camera_position.y, 0.0));
         
-        // Combine the projection and view matrices
-        projection * translation
+        let scale = Matrix4::new_scaling(camera_position.z); // Higher zoom = see less. Lower zoom = see more.
+
+        // Combine the projection and view matrices, then scale to apply zoom
+        projection * scale * translation
     }
 
     fn init_projection_matrix(width: f32, height: f32) -> Matrix4<f32> {
@@ -105,5 +107,9 @@ impl FrameworkController {
 
     pub fn set_camera_tracking_target(&mut self, target_name: String) {
         self.camera.set_tracking_target(Some(target_name));
+    }
+
+    pub fn set_camera_zoom(&mut self, zoom: f32) {
+        self.camera.set_zoom(zoom);
     }
 }
