@@ -1,7 +1,7 @@
 use std::sync::{Arc, RwLock};
 
 use glfw::Context;
-use nalgebra::{Matrix4, Vector2, Vector3};
+use nalgebra::{Matrix4, Vector3};
 
 use crate::framework::graphics;
 

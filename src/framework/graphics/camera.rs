@@ -30,7 +30,7 @@ impl Camera {
     }
 
     pub fn reset_position(&mut self) {
-        self.position = Vector3::new(0.0, 0.0, 0.0);
+        self.position = Vector3::new(0.0, 0.0, self.position.z);
     }
     
     pub fn set_tracking_target(&mut self, tracking_target: Option<String>) {
