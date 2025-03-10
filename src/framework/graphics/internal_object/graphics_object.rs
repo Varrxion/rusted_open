@@ -1,7 +1,7 @@
 use gl::types::GLuint;
 use nalgebra::{Matrix4, Vector3};
 use std::{ffi::CString, sync::{Arc, RwLock}};
-use super::{animation::{backward_animation, forward_animation, random_animation}, animation_config::AnimationConfig, atlas_config::AtlasConfig, tiling_config::TilingConfig, vao::VAO, vbo::VBO};
+use super::{animation::{backward_animation, forward_animation, random_animation}, animation_config::AnimationConfig, atlas_config::AtlasConfig, vao::VAO, vbo::VBO};
 
 pub struct Generic2DGraphicsObject {
     name: String,
@@ -15,7 +15,6 @@ pub struct Generic2DGraphicsObject {
     rotation: f32,
     scale: f32,
     model_matrix: Matrix4<f32>,
-    tiling_config: Option<TilingConfig>,
     atlas_config: Option<AtlasConfig>,
     animation_config: Option<AnimationConfig>,
     elapsed_time: f32,
@@ -35,7 +34,6 @@ impl Clone for Generic2DGraphicsObject {
             rotation: self.rotation,
             scale: self.scale,
             model_matrix: self.model_matrix,
-            tiling_config: self.tiling_config.clone(),
             atlas_config: self.atlas_config.clone(),
             animation_config: self.animation_config.clone(),
             elapsed_time: self.elapsed_time,
@@ -55,7 +53,6 @@ impl Generic2DGraphicsObject {
         rotation: f32,
         scale: f32,
         texture_id: Option<GLuint>,
-        tiling_config: Option<TilingConfig>,
         atlas_config: Option<AtlasConfig>,
         animation_config: Option<AnimationConfig>,
     ) -> Self {
@@ -71,7 +68,6 @@ impl Generic2DGraphicsObject {
             rotation,
             scale,
             model_matrix: Matrix4::identity(), // Identity matrix for 2D
-            tiling_config,
             atlas_config,
             animation_config,
             elapsed_time: 0.0,
@@ -142,10 +138,6 @@ impl Generic2DGraphicsObject {
             // Draw elements based on the number of vertices
             gl::DrawArrays(gl::TRIANGLE_FAN, 0, (self.vertex_data.len() / 2) as i32);
             VAO::unbind();
-
-            if self.name == "player" {
-                self.print_debug();
-            }
         }
     }
 
@@ -196,6 +188,22 @@ impl Generic2DGraphicsObject {
                 println!("Error: uniform 'atlasRows' not found in shader!");
             } else {
                 gl::Uniform1f(atlas_rows_location, atlas_config.atlas_rows as f32);
+            }
+
+            // Get the uniform location for the columns_wide
+            let columns_wide_location = gl::GetUniformLocation(self.shader_program, CString::new("columnsWide").unwrap().as_ptr());
+            if columns_wide_location == -1 {
+                println!("Error: uniform 'columnsWide' not found in shader!");
+            } else {
+                gl::Uniform1f(columns_wide_location, atlas_config.columns_wide as f32);
+            }
+
+            // Get the uniform location for the rows_tall
+            let rows_tall_location = gl::GetUniformLocation(self.shader_program, CString::new("rowsTall").unwrap().as_ptr());
+            if rows_tall_location == -1 {
+                println!("Error: uniform 'rowsTall' not found in shader!");
+            } else {
+                gl::Uniform1f(rows_tall_location, atlas_config.rows_tall as f32);
             }
 
             // Get the uniform location for currentFrame
@@ -286,11 +294,7 @@ impl Generic2DGraphicsObject {
             ];
     
             // For animation debugging
-            println!(
-                "Current Frame: {}, Normalized texture_coords to be passed into VBO:\n {}, {},\n {}, {},\n {}, {},\n {}, {}",
-                self.atlas_config.clone().unwrap().current_frame,
-                u2, v1, u2, v2, u1, v2, u1, v1
-            );
+            // println!("Current Frame: {}, Normalized texture_coords to be passed into VBO:\n {}, {},\n {}, {},\n {}, {},\n {}, {}", self.atlas_config.clone().unwrap().current_frame, u2, v1, u2, v2, u1, v2, u1, v1);
     
             // Now update the texture VBO with the new normalized texture coordinates
             self.update_texture_vbo(texture_coords);
