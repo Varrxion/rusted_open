@@ -142,6 +142,10 @@ impl Generic2DGraphicsObject {
             // Draw elements based on the number of vertices
             gl::DrawArrays(gl::TRIANGLE_FAN, 0, (self.vertex_data.len() / 2) as i32);
             VAO::unbind();
+
+            if self.name == "player" {
+                self.print_debug();
+            }
         }
     }
 
@@ -177,6 +181,7 @@ impl Generic2DGraphicsObject {
 
     pub fn initilize_animation_properties(&self, atlas_config: &AtlasConfig) {
         unsafe {    
+            gl::UseProgram(self.shader_program);
             // Get the uniform location for number of columns in the atlas
             let atlas_columns_location = gl::GetUniformLocation(self.shader_program, CString::new("atlasColumns").unwrap().as_ptr());
             if atlas_columns_location == -1 {
@@ -191,6 +196,14 @@ impl Generic2DGraphicsObject {
                 println!("Error: uniform 'atlasRows' not found in shader!");
             } else {
                 gl::Uniform1f(atlas_rows_location, atlas_config.atlas_rows as f32);
+            }
+
+            // Get the uniform location for currentFrame
+            let current_frame_location = gl::GetUniformLocation(self.shader_program, CString::new("currentFrame").unwrap().as_ptr());
+            if current_frame_location == -1 {
+                println!("Error: uniform 'currentFrame' not found in shader!");
+            } else {
+                gl::Uniform1f(current_frame_location, atlas_config.current_frame as f32);
             }
 
             // For animation debugging
@@ -220,38 +233,70 @@ impl Generic2DGraphicsObject {
                     }
                 }
             }
-            self.update_texture_coords();
+            self.update_texture_coords_raw();
         }
     }
 
-    // Update texture coordinates based on the current frame
+    // Update texture coordinates based on the current frame, passing the raw data to the shader, making the GPU do the work.
+    pub fn update_texture_coords_raw(&mut self) {
+        if let Some(atlas_config) = &mut self.atlas_config {
+
+            unsafe {
+                gl::UseProgram(self.shader_program);
+                // Get the uniform location for currentFrame
+                let current_frame_location = gl::GetUniformLocation(self.shader_program, CString::new("currentFrame").unwrap().as_ptr());
+                if current_frame_location == -1 {
+                    println!("Error: uniform 'currentFrame' not found in shader!");
+                } else {
+                    gl::Uniform1f(current_frame_location, atlas_config.current_frame as f32);
+                }
+            }
+
+            println!(
+                "Current Frame: {}", self.atlas_config.clone().unwrap().current_frame);
+
+            self.update_texture_vbo(self.texture_coords.clone());
+        }
+    }
+    
+
+    // Update texture coordinates based on the current frame, passing the preprocessed data to the shader, making the CPU do the work.
+    // Deprecated
     pub fn update_texture_coords(&mut self) {
         if let Some(atlas_config) = &mut self.atlas_config {
             // Calculate the current frame's position in the atlas (grid)
             let frame_x = (atlas_config.current_frame % atlas_config.atlas_columns) as f32;
             let frame_y = (atlas_config.current_frame / atlas_config.atlas_columns) as f32;
-
-            // Calculate texture coordinates for the frame
-            let u1 = frame_x;
-            let v1 = frame_y;
-            let u2 = u1 + 1.0;
-            let v2 = v1 + 1.0;
-
+    
+            // Normalize the texture coordinates
+            let u1 = frame_x / atlas_config.atlas_columns as f32;
+            let v1 = frame_y / atlas_config.atlas_rows as f32;
+            let u2 = (frame_x + 1.0) / atlas_config.atlas_columns as f32;
+            let v2 = (frame_y + 1.0) / atlas_config.atlas_rows as f32;
+    
+            let u2 = u2.min(1.0);
+            let v2 = v2.min(1.0);
+    
             // Update the texture coordinates for the current frame
             let texture_coords = vec![
-                    u2, v1,
-                    u2, v2,
-                    u1, v2,
-                    u1, v1,
-                ];
-
+                u2, v1,
+                u2, v2,
+                u1, v2,
+                u1, v1,
+            ];
+    
             // For animation debugging
-            println!("Current Frame: {}, Current texture_coords to be passed into VBO:\n {}, {},\n {}, {},\n {}, {},\n {}, {}", self.atlas_config.clone().unwrap().current_frame, u2,v1,u2,v2,u1,v2,u1,v1);
-
-            // Now update the texture VBO with the new texture coordinates
+            println!(
+                "Current Frame: {}, Normalized texture_coords to be passed into VBO:\n {}, {},\n {}, {},\n {}, {},\n {}, {}",
+                self.atlas_config.clone().unwrap().current_frame,
+                u2, v1, u2, v2, u1, v2, u1, v1
+            );
+    
+            // Now update the texture VBO with the new normalized texture coordinates
             self.update_texture_vbo(texture_coords);
         }
     }
+    
 
     fn update_texture_vbo(&mut self, texture_coords: Vec<f32>) {
         let mut tex_vbo = self.tex_vbo.write().unwrap();
