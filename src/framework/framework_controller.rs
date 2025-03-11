@@ -11,7 +11,7 @@ pub struct FrameworkController {
     master_graphics_list: Arc<RwLock<MasterGraphicsList>>,
     projection_matrix: Matrix4<f32>,
     texture_manager: Arc<RwLock<TextureManager>>,
-    camera: Camera,
+    camera: Arc<RwLock<Camera>>,
     width: f32,
     height: f32,
 }
@@ -37,7 +37,7 @@ impl FrameworkController {
             master_graphics_list: Arc::new(RwLock::new(MasterGraphicsList::new())),
             projection_matrix,
             texture_manager: Arc::new(RwLock::new(TextureManager::new())),
-            camera: Camera::new(0.1),
+            camera: Arc::new(RwLock::new(Camera::new(0.1))),
             width,
             height,
         }
@@ -68,7 +68,7 @@ impl FrameworkController {
     pub fn set_resolution(&mut self, width: f32, height: f32) {
         self.width = width;
         self.height = height;
-        self.projection_matrix = Self::calculate_projection_matrix(width, height, &self.camera.get_position());
+        self.projection_matrix = Self::calculate_projection_matrix(width, height, &self.camera.read().unwrap().get_position());
         unsafe {
             gl::Viewport(0, 0, width as i32, height as i32);  // Update the OpenGL viewport
         }
@@ -77,8 +77,9 @@ impl FrameworkController {
     /// Returns true if the window should close
     pub fn render(&mut self, window: &mut glfw::PWindow, delta_time: f32) {
         // Update the camera and projection
-        self.camera.update_position(&self.master_graphics_list.read().unwrap());
-        self.projection_matrix = Self::calculate_projection_matrix(self.width, self.height, &self.camera.get_position());
+        let mut camera_write = self.camera.write().unwrap();
+        camera_write.update_position(&self.master_graphics_list.read().unwrap());
+        self.projection_matrix = Self::calculate_projection_matrix(self.width, self.height, &camera_write.get_position());
 
         // Render here
         unsafe {
@@ -93,23 +94,19 @@ impl FrameworkController {
         window.swap_buffers();
     }
 
-    pub fn shutdown(&mut self) {
+    pub fn shutdown(&self) {
         self.master_graphics_list.write().unwrap().remove_all();
     }
 
-    pub fn get_texture_manager(&mut self) -> Arc<RwLock<TextureManager>> {
+    pub fn get_texture_manager(&self) -> Arc<RwLock<TextureManager>> {
         return self.texture_manager.clone();
     }
 
-    pub fn get_master_graphics_list(&mut self) -> Arc<RwLock<MasterGraphicsList>> {
+    pub fn get_master_graphics_list(&self) -> Arc<RwLock<MasterGraphicsList>> {
         return self.master_graphics_list.clone();
     }
 
-    pub fn set_camera_tracking_target(&mut self, target_name: String) {
-        self.camera.set_tracking_target(Some(target_name));
-    }
-
-    pub fn set_camera_zoom(&mut self, zoom: f32) {
-        self.camera.set_zoom(zoom);
+    pub fn get_camera(&self) -> Arc<RwLock<Camera>> {
+        return self.camera.clone();
     }
 }
